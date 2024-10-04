@@ -1,6 +1,12 @@
-import "dotenv/config";
-import { applicationDefault, getApp, getApps, initializeApp, type App } from "firebase-admin/app";
-import { getAuth } from "firebase-admin/auth";
+import 'dotenv/config';
+import {
+  type App,
+  applicationDefault,
+  getApp,
+  getApps,
+  initializeApp,
+} from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
 
 let firebaseAdmin: App | undefined;
 

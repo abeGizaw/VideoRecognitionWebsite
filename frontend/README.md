@@ -5,7 +5,7 @@
 Generated with [Bati](https://batijs.dev) ([version 292](https://www.npmjs.com/package/create-bati/v/0.0.292)) using this command:
 
 ```sh
-npm create bati -- --react --firebase-auth --express --prettier
+--npm create bati -- --react --firebase-auth --express --prettier
 ```
 
 <!--bati:start section="TOC"-->

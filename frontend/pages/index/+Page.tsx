@@ -1,17 +1,34 @@
-import React from "react";
-import { Counter } from "./Counter.js";
+import {
+  Box,
+  Button,
+  Option,
+  Select,
+  Typography,
+  useColorScheme,
+} from '@mui/joy';
 
-export default function Page() {
+export const Page = () => {
+  const { mode, setMode } = useColorScheme();
+
   return (
-    <>
-      <h1>My Vike app</h1>
-      This page is:
-      <ul>
-        <li>Rendered to HTML.</li>
-        <li>
-          Interactive. <Counter />
-        </li>
-      </ul>
-    </>
+    <Box
+      sx={{
+        width: 'fit-content',
+        margin: 'auto',
+        height: '100vh',
+        alignItems: 'center',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '1rem',
+      }}
+    >
+      <Typography level='h1'>Hello world</Typography>
+      <Button>Test</Button>
+      <Select value={mode} onChange={(_, newMode) => setMode(newMode)}>
+        <Option value='system'>System</Option>
+        <Option value='light'>Light</Option>
+        <Option value='dark'>Dark</Option>
+      </Select>
+    </Box>
   );
-}
+};
