@@ -3,6 +3,7 @@ import { DesktopNavigation } from './DesktopNavigation';
 import { usePageContext } from 'vike-react/usePageContext';
 import { MobileNavigation } from './MobileNavigation';
 import { constants } from '../data/constants';
+import logo from '../assets/logo.png';
 
 export const Header = () => {
   const pageContext = usePageContext();
@@ -25,7 +26,7 @@ export const Header = () => {
       <Link href='/'>
         <Box
           component='img'
-          src='assets/logo.png'
+          src={logo}
           alt='What it doooo'
           sx={{ height: { xs: '50px', lg: '80px' } }}
         />

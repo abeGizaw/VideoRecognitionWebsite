@@ -6,7 +6,7 @@ import { defineConfig } from 'vite';
 // eslint-disable-next-line no-restricted-syntax
 export default defineConfig({
   plugins: [
-    vike({}),
+    vike({ prerender: true }),
     devServer({
       entry: 'hono-entry.ts',
 
@@ -24,4 +24,5 @@ export default defineConfig({
     }),
     react({}),
   ],
+  assetsInclude: ['**/*.MOV'],
 });

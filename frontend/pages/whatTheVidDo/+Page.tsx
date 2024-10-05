@@ -1,13 +1,13 @@
 import { Box, Button, Typography } from '@mui/joy';
 import { useState } from 'react';
-
+import testVideo from '../../assets/testVid.mov';
 export const Page = () => {
   const [message, setMessage] = useState<string>('');
 
   const handleUpload = async () => {
     try {
       // Fetch the video from the assets folder
-      const response = await fetch('/assets/testVid.mov');
+      const response = await fetch(testVideo);
       const videoBlob = await response.blob();
 
       // Create a File object from the video blob (MOV file)
@@ -34,7 +34,6 @@ export const Page = () => {
       setMessage('Error uploading file');
     }
   };
-
 
   return (
     <Box
