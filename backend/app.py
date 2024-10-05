@@ -1,5 +1,4 @@
-from flask import Flask, request, jsonify
-import os
+from flask import Flask
 from flask_cors import CORS
 from controllers.video_controller import upload_and_process_video
 
@@ -9,10 +8,11 @@ app = Flask(__name__)
 CORS(app)  
 
 # Set a folder for temporary uploads
-UPLOAD_FOLDER = './uploads'
+UPLOAD_FOLDER = '/tmp/uploads'
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
+    
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 @app.route('/upload', methods=['POST'])
