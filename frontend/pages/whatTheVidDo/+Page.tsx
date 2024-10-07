@@ -22,10 +22,20 @@ export const Page = () => {
       setMessage('Uploading file...');
 
       // Send the file to the backend
-      const uploadResponse = await fetch('http://127.0.0.1:5001/upload', {
-        method: 'POST',
-        body: formData,
-      });
+      // const uploadResponse = await fetch('http://127.0.0.1:5001/upload', {
+      //   method: 'POST',
+      //   body: formData,
+      // });
+      const uploadResponse = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/upload`,
+        {
+          method: 'POST',
+          body: formData,
+          headers: {
+            Accept: 'application/json',
+          },
+        },
+      );
 
       const result = await uploadResponse.json();
       setMessage(!message ? result.message : '');
