@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "functions-framework": "^0.6.10"
+    "functions-framework": "^0.6.10",
+    "react-dropzone": "^14.2.9"
   }
 }
