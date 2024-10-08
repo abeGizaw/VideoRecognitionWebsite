@@ -1,24 +1,50 @@
 import { Box, Button, Typography } from '@mui/joy';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+// React Dropzone uses a CommonJS export while Vite expects ES Module exports, so we need to import it like this
+import * as pkg from 'react-dropzone';
+const { useDropzone } = pkg;
+
 export const Page = () => {
   const [message, setMessage] = useState<string>('');
   const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoPreview, setVideoPreview] = useState<string>('');
+
+  // Callback to handle the file drop event in our 'Dropzone' component
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    if (acceptedFiles && acceptedFiles.length > 0) {
+      const file = acceptedFiles[0];
+      if (file.type.startsWith('video/')) {
+        setVideoFile(file);
+        setMessage(`Selected video: ${file.name}`);
+      } else {
+        setMessage('Please select a valid video file.');
+      }
+    }
+  }, []);
+
+  // Run whenever the videoFile state changes
+  useEffect(() => {
+    if (videoFile) {
+      // Create a URL for the video file to preview it
+      const previewUrl = URL.createObjectURL(videoFile);
+      setVideoPreview(previewUrl);
+
+      return () => {
+        URL.revokeObjectURL(previewUrl);
+      };
+    } else {
+      setVideoPreview('');
+    }
+  }, [videoFile]);
 
   const handleUpload = async () => {
-    console.log(videoFile);
     if (videoFile) {
       try {
-        // Create FormData and append the video file
+        // Create a FormData object to send the file to the server
         const formData = new FormData();
         formData.append('file', videoFile);
-
         setMessage('Uploading file...');
 
-        // Send the file to the backend
-        // const uploadResponse = await fetch('http://127.0.0.1:5001/upload', {
-        //   method: 'POST',
-        //   body: formData,
-        // });
         const uploadResponse = await fetch(
           `${import.meta.env.VITE_BACKEND_URL}/upload`,
           {
@@ -30,38 +56,29 @@ export const Page = () => {
           },
         );
 
-        const result = await uploadResponse.json();
-        setMessage(result.message);
+        if (uploadResponse.ok) {
+          const result = await uploadResponse.json();
+          setMessage(result.message);
+        } else {
+          setMessage('Failed to upload file.');
+        }
       } catch (error) {
         console.error('Error uploading file:', error);
-        setMessage('Error uploading file');
+        setMessage('Failed to upload file.');
       }
     }
   };
 
-  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    const file = event.dataTransfer.files[0];
-    if (file && file.type.startsWith('video/')) {
-      setVideoFile(file);
-      setMessage(`Dropped video: ${file.name}`);
-    } else {
-      setMessage('Please drop a valid video file.');
-    }
-  };
+  // React Dropzone hook to get the props for the dropzone area
+  const { getRootProps, isDragActive, getInputProps } = useDropzone({
+    onDrop,
+    accept: 'video/*',
+    multiple: false,
+  });
 
-  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-  };
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file && file.type.startsWith('video/')) {
-      setVideoFile(file);
-      setMessage(`Selected video: ${file.name}`);
-    } else {
-      setMessage('Please upload a valid video file.');
-    }
+  const handleRemove = () => {
+    setVideoFile(null);
+    setMessage('');
   };
 
   return (
@@ -69,18 +86,19 @@ export const Page = () => {
       sx={{
         width: 'fit-content',
         margin: 'auto',
-        height: '100vh',
+        minHeight: '100vh',
         alignItems: 'center',
         display: 'flex',
         flexDirection: 'column',
         gap: '1rem',
+        paddingTop: '2rem',
       }}
     >
       <Typography level='h1'>Upload Video</Typography>
+
       {/* Drag and Drop Area */}
       <Box
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
+        {...getRootProps()}
         sx={{
           border: '2px dashed gray',
           padding: '2rem',
@@ -91,21 +109,36 @@ export const Page = () => {
           cursor: 'pointer',
         }}
       >
-        <Typography>Drag and drop a video here</Typography>
+        <input
+          {...(getInputProps() as React.InputHTMLAttributes<HTMLInputElement>)}
+        />{' '}
+        {isDragActive ? (
+          <Typography>Drop the video here...</Typography>
+        ) : (
+          <Typography>
+            Drag and drop a video here, or click to selec one
+          </Typography>
+        )}
       </Box>
 
-      <input
-        type='file'
-        accept='video/*'
-        style={{ display: 'none' }}
-        id='video-upload'
-        onChange={handleFileChange}
-      />
-      <label htmlFor='video-upload'>
-        <Button component='span'>Choose a Video</Button>
-      </label>
+      {/* Video preview and remove button */}
+      {videoFile && (
+        <Box sx={{ textAlign: 'center' }}>
+          <Typography>Selected video: {videoFile.name}</Typography>
+          <video width='300' controls>
+            <source src={videoPreview} type={videoFile.type} />
+            Your browser does not support the video tag.
+          </video>
+          <Button onClick={handleRemove} sx={{ marginTop: '1rem' }}>
+            Remove Video
+          </Button>
+        </Box>
+      )}
 
-      <Button onClick={handleUpload}>Upload</Button>
+      {/* Upload button */}
+      <Button onClick={handleUpload} disabled={!videoFile}>
+        Upload
+      </Button>
       {message && <Typography>{message}</Typography>}
     </Box>
   );

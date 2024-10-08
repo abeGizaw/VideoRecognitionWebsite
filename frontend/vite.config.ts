@@ -25,4 +25,7 @@ export default defineConfig({
     react({}),
   ],
   assetsInclude: ['**/*.MOV'],
+  optimizeDeps: {
+    include: ['react-dropzone'],
+  },
 });
