@@ -21,10 +21,12 @@
     "firebase-admin": "^12.5.0",
     "firebaseui": "^6.1.0",
     "hono": "^4.6.3",
+    "next": "^14.2.15",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-dropzone": "^10.2.2",
     "react-icons": "^5.3.0",
+    "react-media-recorder": "^1.7.1",
     "react-player": "^2.16.0",
     "vike-react": "^0.5.7"
   },
