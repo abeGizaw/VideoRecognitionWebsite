@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "functions-framework": "^0.6.10",
-    "react-dropzone": "^14.2.9"
+    "react-dropzone": "^14.2.9",
+    "react-media-recorder": "^1.7.1"
   }
 }
