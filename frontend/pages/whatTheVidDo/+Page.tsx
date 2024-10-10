@@ -2,6 +2,7 @@ import { Box, Button, Typography } from '@mui/joy';
 import { useCallback, useEffect, useState } from 'react';
 // React Dropzone uses a CommonJS export while Vite expects ES Module exports, so we need to import it like this
 import * as pkg from 'react-dropzone';
+import { DragNDrop } from '../../components/DragNDrop';
 const { useDropzone } = pkg;
 
 export const Page = () => {
@@ -22,7 +23,6 @@ export const Page = () => {
     }
   }, []);
 
-  // Run whenever the videoFile state changes
   useEffect(() => {
     if (videoFile) {
       // Create a URL for the video file to preview it
@@ -97,29 +97,11 @@ export const Page = () => {
       <Typography level='h1'>Upload Video</Typography>
 
       {/* Drag and Drop Area */}
-      <Box
-        {...getRootProps()}
-        sx={{
-          border: '2px dashed gray',
-          padding: '2rem',
-          textAlign: 'center',
-          width: '300px',
-          borderRadius: '10px',
-          backgroundColor: '#f9f9f9',
-          cursor: 'pointer',
-        }}
-      >
-        <input
-          {...(getInputProps() as React.InputHTMLAttributes<HTMLInputElement>)}
-        />{' '}
-        {isDragActive ? (
-          <Typography>Drop the video here...</Typography>
-        ) : (
-          <Typography>
-            Drag and drop a video here, or click to selec one
-          </Typography>
-        )}
-      </Box>
+      <DragNDrop
+        rootProps={getRootProps}
+        inputProps={getInputProps}
+        isDragActive={isDragActive}
+      />
 
       {/* Video preview and remove button */}
       {videoFile && (
