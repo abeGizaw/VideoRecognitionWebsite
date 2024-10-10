@@ -14,7 +14,7 @@ export const VideoPreview = ({ stream, blob }: VideoPreviewProps) => {
     }
   }, [stream]);
   if (!stream) {
-    <video src={blob} controls autoPlay loop />;
+    return <video src={blob} controls autoPlay loop />;
   }
   return <video ref={videoRef} controls autoPlay loop />;
 };
