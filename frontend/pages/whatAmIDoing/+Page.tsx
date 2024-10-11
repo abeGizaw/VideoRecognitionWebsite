@@ -2,6 +2,7 @@ import { Box } from '@mui/joy';
 import { Recorder } from '../../components/Recorder';
 import { Chatbot } from '../../components/Chatbot';
 import { useState } from 'react';
+import { WelcomeMessage } from '../../data/constants';
 export interface Message {
   text: string;
   isUser: boolean;
@@ -9,10 +10,10 @@ export interface Message {
 
 export const Page = () => {
   const [messages, setMessages] = useState<Message[]>([
-    { text: 'Hello! How can I help you?', isUser: false },
+    { text: WelcomeMessage, isUser: false },
   ]);
-  
-  return (
+
+  return (  
     <Box
       sx={{
         display: 'flex',
