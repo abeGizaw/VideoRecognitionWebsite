@@ -4,7 +4,7 @@ from models.video_model import process_video
 from utils.index import save_video_to_dir
 
 # Controller method to handle video upload and processing
-def upload_and_process_video():
+def upload_and_process_video(source: str) -> str:
     try: 
         if 'file' not in request.files:
             return jsonify({'message': 'No file uploaded'}), 400
@@ -20,7 +20,7 @@ def upload_and_process_video():
         # Process the video with out model
         result = process_video(file_path)
 
-        return jsonify({'message': f'Video {file.filename} processed successfully. {result}'})
+        return jsonify({'message': f'Video processed successfully. {result} from {source}'})
     except Exception as e:
         # Log the exception for debugging
         print("Error in upload_and_process_video:", traceback.format_exc())
