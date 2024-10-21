@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 from flask_cors import CORS
 from controllers.video_controller import upload_and_process_video
 import os
@@ -6,7 +6,7 @@ import os
 # Initialize the Flask app
 app = Flask(__name__)
 # CORS(app, resources={r"/upload": {"origins": "https://what-tha-vid-do.web.app"}})
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "https://what-tha-vid-do.web.app"}})
 
 # Set a folder for temporary uploads
 UPLOAD_FOLDER = '/tmp/uploads'
@@ -17,7 +17,8 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 @app.route('/upload', methods=['POST'])
 def upload_video():
-    return upload_and_process_video()
+    source = request.args.get('source', default='dragNdrop')
+    return upload_and_process_video(source)
 
 @app.route('/')
 def index():
