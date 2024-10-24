@@ -6,6 +6,7 @@ import pickle
 def load_training_data(train_df, train_videos_dir):
     train_mappings = cache_mappings('train_cache.pkl')
     if train_mappings is not None:
+        train_video_paths, train_video_labels = train_mappings
         print(f"Loaded {len(train_video_paths)} training videos from cache.\n")
     else:
         print('Mapping training videos to labels...')
