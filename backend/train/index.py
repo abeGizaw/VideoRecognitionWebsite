@@ -3,13 +3,13 @@ import pandas as pd
 from trainHelper import load_training_data, load_validation_data
 
 print('Loading Kinetics-700 dataset...\n')
-annotations_path = './data/kinetics-dataset/k700-2020/annotations'
+annotations_path = '../data/kinetics-dataset/k700-2020/annotations'
 train_csv = os.path.join(annotations_path, 'train.csv')
 val_csv = os.path.join(annotations_path, 'val.csv')
 train_df = pd.read_csv(train_csv)
 val_df = pd.read_csv(val_csv)
-train_videos_dir = './data/kinetics-dataset/k700-2020/train'
-val_videos_dir = './data/kinetics-dataset/k700-2020/val'
+train_videos_dir = '../data/kinetics-dataset/k700-2020/train'
+val_videos_dir = '../data/kinetics-dataset/k700-2020/val'
 
 
 # Load or compute training mappings
