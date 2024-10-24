@@ -1,6 +1,8 @@
 import os
 import pandas as pd
 from joblib import Parallel, delayed
+import pickle
+
 
 annotations_path = './data/kinetics-dataset/k700-2020/annotations'
 train_csv = os.path.join(annotations_path, 'train.csv')
@@ -35,11 +37,26 @@ def map_videos_to_labels_joblib(df, video_dir, n_jobs=-1):
     
     return video_paths, video_labels
 
+
+
+def cache_mappings(file_name, data=None):
+    if data is None:  # Load cache
+        if os.path.exists(file_name):
+            with open(file_name, 'rb') as f:
+                return pickle.load(f)
+        return None
+    else:  # Save cache
+        with open(file_name, 'wb') as f:
+            pickle.dump(data, f)
+
+            
 train_video_paths, train_video_labels = map_videos_to_labels_joblib(train_df, train_videos_dir)
+cache_mappings('train_cache.pkl', (train_video_paths, train_video_labels))
 print(f"Loaded {len(train_video_paths)} training videos.")
 print(f"Train Video Labels: {len(train_video_labels)}")
 
 val_video_paths, val_video_labels = map_videos_to_labels_joblib(val_df, val_videos_dir)
+cache_mappings('val_cache.pkl', (val_video_paths, val_video_labels))
 print(f"Loaded {len(val_video_paths)} validation videos.")
 print(f"Val Video Labels: {len(val_video_labels)}")
 
