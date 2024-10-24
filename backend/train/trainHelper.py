@@ -6,7 +6,6 @@ import pickle
 def load_training_data(train_df, train_videos_dir):
     train_mappings = cache_mappings('train_cache.pkl')
     if train_mappings is not None:
-        train_video_paths, train_video_labels = train_mappings
         print(f"Loaded {len(train_video_paths)} training videos from cache.\n")
     else:
         print('Mapping training videos to labels...')
@@ -15,6 +14,8 @@ def load_training_data(train_df, train_videos_dir):
         print(f"Train Video Labels: {len(train_video_labels)}")
         print("Caching training video mappings...\n")
         cache_mappings('train_cache.pkl', (train_video_paths, train_video_labels))
+
+    return train_video_paths, train_video_labels
 
 
 def load_validation_data(val_df, val_videos_dir):
@@ -29,6 +30,8 @@ def load_validation_data(val_df, val_videos_dir):
         print(f"Val Video Labels: {len(val_video_labels)}")
         print("Caching validation video mappings...\n")
         cache_mappings('val_cache.pkl', (val_video_paths, val_video_labels))
+
+    return val_video_paths, val_video_labels
 
 
 def check_video_exists(row, video_dir):
