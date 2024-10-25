@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 from trainHelper import load_training_data, load_validation_data
+from CNN3D import CreateDataset
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 import torch
@@ -28,39 +29,25 @@ print('Loading validation video mappings from cache if available...')
 val_video_paths, val_video_labels = load_validation_data(val_df, val_videos_dir)
 
 
-class CreateDataset(Dataset):
-    def __init__(self, video_paths, video_labels, transform=None):
-        
-        self.video_paths = torch.tensor(video_paths, dtype=torch.float32)
-        self.video_labels = torch.tensor(video_labels, dtype=torch.float32)
-        self.transform = transform
 
-    def __len__(self):
-        return len(self.video_paths)
+train_video_labels = np.array(train_video_labels)
+val_video_labels = np.array(val_video_labels)
 
-    def __getitem__(self, idx):
-        video_path = self.video_paths[idx]
-        video_label = self.video_labels[idx]
+unique_train_labels, train_counts = np.unique(train_video_labels, return_counts=True)
+unique_val_labels, val_counts = np.unique(val_video_labels, return_counts=True)
+print(f"Unique training labels: {len(unique_train_labels)}")
+print(f"Unique validation labels: {len(unique_val_labels)}")
 
-        # Load video frames
-        video_frames = load_video(video_path)
+most_common_train_label = unique_train_labels[np.argmax(train_counts)]
+most_common_val_label = unique_val_labels[np.argmax(val_counts)]
+least_common_train_label = unique_train_labels[np.argmin(train_counts)]
+least_common_val_label = unique_val_labels[np.argmin(val_counts)]
+print(f"Most common training label: {most_common_train_label} with {np.max(train_counts)} videos.")
+print(f"Most common validation label: {most_common_val_label} with {np.max(val_counts)} videos.")
+print(f"Least common training label: {least_common_train_label} with {np.min(train_counts)} videos.")
+print(f"Least common validation label: {least_common_val_label} with {np.min(val_counts)} videos.")
 
-        if self.transform:
-            video_frames = self.transform(video_frames)
-
-        return video_frames, video_label
-    
-def load_video(video_path):
-    # Load video frames
-    pass
-
-# Define transformations
-train_video_labels = pd.array(train_video_labels)
-val_video_labels = pd.array(val_video_labels)
-train_video_paths = pd.array(train_video_paths)
-val_video_paths = pd.array(val_video_paths)
-
-most_common_train = train_video_labels.value_counts().idxmax()
-most_common_val = val_video_labels.value_counts().idxmax()
-print(f'Most common training label: {most_common_train}')
-print(f'Most common validation label: {most_common_val}')
+most_common_train_proportion = train_counts[most_common_train_label] / len(train_video_labels)
+most_common_val_proportion = val_counts[most_common_val_label] / len(val_video_labels)
+print(f"Proportion of most common training label: {most_common_train_proportion:.2f}")
+print(f"Proportion of most common validation label: {most_common_val_proportion:.2f}")
