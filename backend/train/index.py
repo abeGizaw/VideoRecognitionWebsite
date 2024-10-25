@@ -47,7 +47,7 @@ print(f"Most common validation label: {most_common_val_label} with {np.max(val_c
 print(f"Least common training label: {least_common_train_label} with {np.min(train_counts)} videos.")
 print(f"Least common validation label: {least_common_val_label} with {np.min(val_counts)} videos.")
 
-most_common_train_proportion = train_counts[most_common_train_label] / len(train_video_labels)
-most_common_val_proportion = val_counts[most_common_val_label] / len(val_video_labels)
+most_common_train_proportion = np.argmax(train_counts) / len(train_video_labels)
+most_common_val_proportion = np.argmax(val_counts) / len(val_video_labels)
 print(f"Proportion of most common training label: {most_common_train_proportion:.2f}")
 print(f"Proportion of most common validation label: {most_common_val_proportion:.2f}")
