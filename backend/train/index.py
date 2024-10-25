@@ -32,22 +32,21 @@ val_video_paths, val_video_labels = load_validation_data(val_df, val_videos_dir)
 
 train_video_labels = np.array(train_video_labels)
 val_video_labels = np.array(val_video_labels)
-
 unique_train_labels, train_counts = np.unique(train_video_labels, return_counts=True)
-unique_val_labels, val_counts = np.unique(val_video_labels, return_counts=True)
 print(f"Unique training labels: {len(unique_train_labels)}")
-print(f"Unique validation labels: {len(unique_val_labels)}")
-
 most_common_train_label = unique_train_labels[np.argmax(train_counts)]
-most_common_val_label = unique_val_labels[np.argmax(val_counts)]
 least_common_train_label = unique_train_labels[np.argmin(train_counts)]
-least_common_val_label = unique_val_labels[np.argmin(val_counts)]
-print(f"Most common training label: {most_common_train_label} with {np.max(train_counts)} videos.")
-print(f"Most common validation label: {most_common_val_label} with {np.max(val_counts)} videos.")
-print(f"Least common training label: {least_common_train_label} with {np.min(train_counts)} videos.")
-print(f"Least common validation label: {least_common_val_label} with {np.min(val_counts)} videos.")
+print(f"Most common training label: {most_common_train_label} with {np.max(train_counts)} videos out of {len(train_video_labels)}.")
+print(f"Least common training label: {least_common_train_label} with {np.min(train_counts)} videos out of {len(train_video_labels)}.")
+most_common_train_proportion = np.max(train_counts) / len(train_video_labels)
+print(f"Proportion of most common training label: {most_common_train_proportion} \n")
 
-most_common_train_proportion = np.argmax(train_counts) / len(train_video_labels)
-most_common_val_proportion = np.argmax(val_counts) / len(val_video_labels)
-print(f"Proportion of most common training label: {most_common_train_proportion:.2f}")
-print(f"Proportion of most common validation label: {most_common_val_proportion:.2f}")
+
+unique_val_labels, val_counts = np.unique(val_video_labels, return_counts=True)
+print(f"Unique validation labels: {len(unique_val_labels)}")
+most_common_val_label = unique_val_labels[np.argmax(val_counts)]
+least_common_val_label = unique_val_labels[np.argmin(val_counts)]
+print(f"Most common validation label: {most_common_val_label} with {np.max(val_counts)} videos out of {len(val_video_labels)}.")
+print(f"Least common validation label: {least_common_val_label} with {np.min(val_counts)} videos out of {len(val_video_labels)}.")
+most_common_val_proportion = np.max(val_counts) / len(val_video_labels)
+print(f"Proportion of most common validation label: {most_common_val_proportion}")
