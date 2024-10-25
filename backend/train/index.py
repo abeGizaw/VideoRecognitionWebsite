@@ -7,14 +7,16 @@ import torch
 import numpy as np
 
 print('Loading Kinetics-700 dataset...\n')
-annotations_path = '../data/kinetics-dataset/k700-2020/annotations'
+current_dir = os.path.dirname(os.path.abspath(__file__))
+annotations_path = os.path.join(current_dir, '../../../data/kinetics-dataset/k700-2020/annotations')
 train_csv = os.path.join(annotations_path, 'train.csv')
 val_csv = os.path.join(annotations_path, 'val.csv')
+train_videos_dir = os.path.join(current_dir, '../../../data/kinetics-dataset/k700-2020/train')
+val_videos_dir = os.path.join(current_dir, '../../../data/kinetics-dataset/k700-2020/val')
+
+# Load CSV files
 train_df = pd.read_csv(train_csv)
 val_df = pd.read_csv(val_csv)
-train_videos_dir = '../data/kinetics-dataset/k700-2020/train'
-val_videos_dir = '../data/kinetics-dataset/k700-2020/val'
-
 
 # Load or compute training mappings
 print('Loading training video mappings from cache if available...')
@@ -52,10 +54,7 @@ def load_video(video_path):
     # Load video frames
     pass
 
-
-
-
-
+# Define transformations
 train_video_labels = pd.array(train_video_labels)
 val_video_labels = pd.array(val_video_labels)
 train_video_paths = pd.array(train_video_paths)
