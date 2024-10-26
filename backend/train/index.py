@@ -1,11 +1,6 @@
 import os
 import pandas as pd
 from trainHelper import load_training_data, load_validation_data
-from CNN3D import CreateDataset
-from torch.utils.data import DataLoader, Dataset
-from torchvision import transforms
-import torch
-import numpy as np
 
 print('Loading Kinetics-700 dataset...\n')
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -18,6 +13,11 @@ val_videos_dir = os.path.join(current_dir, '../../../data/kinetics-dataset/k700-
 # Load CSV files
 train_df = pd.read_csv(train_csv)
 val_df = pd.read_csv(val_csv)
+
+print("Loading Jester dataset...\n")
+current_dir = os.path.dirname(os.path.abspath(__file__))
+jester_path = os.path.join(current_dir, '../../../data/jester')
+
 
 # Load or compute training mappings
 print('Loading training video mappings from cache if available...')
