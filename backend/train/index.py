@@ -23,7 +23,7 @@ jester_path = os.path.join(current_dir, '../../../data/jester')
 print('Loading training video mappings from cache if available...')
 train_video_paths, train_video_labels = load_training_data(train_df, train_videos_dir)
 
-
+#test
 # Load or compute validation mappings
 print('Loading validation video mappings from cache if available...')
 val_video_paths, val_video_labels = load_validation_data(val_df, val_videos_dir)
