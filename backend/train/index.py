@@ -10,6 +10,8 @@ val_csv = os.path.join(annotations_path, 'val.csv')
 train_videos_dir = os.path.join(current_dir, '../../../data/kinetics-dataset/k700-2020/train')
 val_videos_dir = os.path.join(current_dir, '../../../data/kinetics-dataset/k700-2020/val')
 
+
+#Here again 
 # Load CSV files
 train_df = pd.read_csv(train_csv)
 val_df = pd.read_csv(val_csv)
