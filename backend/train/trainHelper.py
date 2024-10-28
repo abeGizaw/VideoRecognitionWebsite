@@ -75,4 +75,16 @@ def cache_mappings(file_name, data=None):
     else:  # Save cache
         with open(file_name, 'wb') as f:
             pickle.dump(data, f)
- 
+
+def createStats(df, name, type_of_data="training"):
+    df_val_counts = df.value_counts()
+    uniqueLabels = df_val_counts.index        
+    print(f'Unique labels in {name} dataset: {len(uniqueLabels)} ') 
+    most_common_label = df_val_counts.idxmax()
+    least_common_label = df_val_counts.idxmin()
+    most_common_count = df_val_counts.max()
+    least_common_count = df_val_counts.min()
+    most_common_proportion = most_common_count / len(df)
+    print(f"{name} most common {type_of_data} label: {most_common_label} with {most_common_count} videos out of {len(df)}.")
+    print(f"{name} least common {type_of_data} label: {least_common_label} with {least_common_count} videos out of {len(df)}.")
+    print(f"{name} proportion of most common {type_of_data} label: {most_common_proportion} \n")
