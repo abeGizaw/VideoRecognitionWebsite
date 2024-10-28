@@ -2,9 +2,9 @@ import os
 import pandas as pd
 from joblib import Parallel, delayed
 import pickle
-
-def load_training_data(train_df, train_videos_dir):
-    train_mappings = cache_mappings('train_cache.pkl')
+ 
+def load_training_data(train_df, train_videos_dir, cache_name):
+    train_mappings = cache_mappings(f'{cache_name}.pkl')
     if train_mappings is not None:
         train_video_paths, train_video_labels = train_mappings
         print(f"Loaded {len(train_video_paths)} training videos from cache.\n")
@@ -14,11 +14,11 @@ def load_training_data(train_df, train_videos_dir):
         print(f"Loaded {len(train_video_paths)} training videos.")
         print(f"Train Video Labels: {len(train_video_labels)}")
         print("Caching training video mappings...\n")
-        cache_mappings('train_cache.pkl', (train_video_paths, train_video_labels))
-
+        cache_mappings(f'{cache_name}.pkl', (train_video_paths, train_video_labels))
+ 
     return train_video_paths, train_video_labels
-
-
+ 
+ 
 def load_validation_data(val_df, val_videos_dir):
     val_mappings = cache_mappings('val_cache.pkl')
     if val_mappings is not None:
@@ -31,23 +31,23 @@ def load_validation_data(val_df, val_videos_dir):
         print(f"Val Video Labels: {len(val_video_labels)}")
         print("Caching validation video mappings...\n")
         cache_mappings('val_cache.pkl', (val_video_paths, val_video_labels))
-
+ 
     return val_video_paths, val_video_labels
-
-
+ 
+ 
 def check_video_exists(row, video_dir):
     label = row['label']
     time_start = str(row['time_start']).zfill(6)
     time_end = str(row['time_end']).zfill(6)
     video_name = f"{row['youtube_id']}_{time_start}_{time_end}.mp4"
     video_path = os.path.join(video_dir, label, video_name)
-    
+   
     if os.path.exists(video_path):
         return video_path, label
     else:
         print(f"Warning: Video {video_name} not found in {label} folder.")
         return None, None
-
+ 
 def map_videos_to_labels_joblib(df, video_dir, n_jobs=-1):
     results = Parallel(n_jobs=n_jobs)(
         delayed(check_video_exists)(row, video_dir) for _, row in df.iterrows()
@@ -55,7 +55,7 @@ def map_videos_to_labels_joblib(df, video_dir, n_jobs=-1):
     video_paths = [res[0] for res in results if res[0] is not None]
     video_labels = [res[1] for res in results if res[1] is not None]
     return video_paths, video_labels
-
+ 
 def cache_mappings(file_name, data=None):
     if data is None:  # Load cache
         if os.path.exists(file_name):
@@ -65,3 +65,4 @@ def cache_mappings(file_name, data=None):
     else:  # Save cache
         with open(file_name, 'wb') as f:
             pickle.dump(data, f)
+ 
