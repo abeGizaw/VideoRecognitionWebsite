@@ -10,7 +10,6 @@ val_csv = os.path.join(annotations_path, 'val.csv')
 train_videos_dir = os.path.join(current_dir, '../../../data/kinetics-dataset/k700-2020/train')
 val_videos_dir = os.path.join(current_dir, '../../../data/kinetics-dataset/k700-2020/val')
 
-
 # Load CSV files
 train_df = pd.read_csv(train_csv)
 val_df = pd.read_csv(val_csv)
@@ -26,36 +25,35 @@ val_video_paths, val_video_labels = load_validation_data(val_df, val_videos_dir,
 
 
 
-print("Loading Jester dataset...\n")
-current_dir = os.path.dirname(os.path.abspath(__file__))
+print('\nLoading Jester dataset...')
 jester_path = os.path.join(current_dir, '../../../data/jester')
 jester_path_train = os.path.join(jester_path, 'jester-v1-train.csv') 
 jester_path_validation = os.path.join(jester_path, 'jester-v1-validation.csv') 
 jester_path_videos =  os.path.join(jester_path,'20bn-jester-v1')
 
+# Load the CSV files
+jester_training_df = pd.read_csv(jester_path_train, header=None, names=['id', 'label'], sep=';')
+jester_validation_df = pd.read_csv(jester_path_validation, header=None, names=['id', 'label'], sep = ';')
 
+# Load or compute training mappings
 print('Loading jester training video mappings from cache if available...')
-jester_training_labels_df = pd.read_csv(jester_path_train, header=None, names=['id', 'label'], sep=';')
-print('Loading jester validation video mappings from cache if available...\n')
-jester_validation_labels_df = pd.read_csv(jester_path_validation, header=None, names=['id', 'label'], sep = ';')
+jesterVideo_train_paths, jester_train_video_labels = load_training_data(jester_training_df,jester_path_videos, "jester")
+
+# Load or compute validation mappings
+print('Loading jester validation video mappings from cache if available...')
+jesterVideo_val_paths, jester_val_video_labels = load_validation_data(jester_validation_df,jester_path_videos, "jester")
 
 
-jesterVideo_train_paths, jester_train_video_labels = load_training_data(jester_training_labels_df,jester_path_videos, "jester")
-jesterVideo_val_paths, jester_val_video_labels = load_validation_data(jester_validation_labels_df,jester_path_videos, "jester")
-
-# #Kinetics Data
+# Kinetics Data
 train_video_labels_series = pd.Series(train_video_labels)
 val_video_labels_series = pd.Series(val_video_labels)
 
 
-# #Jester 
-# #Jester Data
+# Jester Data
 jester_train_video_labels = pd.Series(jester_train_video_labels)
 jester_val_video_labels = pd.Series(jester_val_video_labels)
 
-
-
-
+# Create Stats
 createStats(jester_train_video_labels, "Jester", "training")
 createStats(jester_val_video_labels, "Jester", "validation")
 createStats(train_video_labels_series, "Kinetics", "training")
