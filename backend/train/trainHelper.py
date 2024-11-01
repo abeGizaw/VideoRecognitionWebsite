@@ -58,7 +58,6 @@ def check_video_exists(row, video_dir, cache_name):
     return None, None
  
 def map_videos_to_labels_joblib(df, video_dir, n_jobs=-1,*, cache_name=None):
-    # sife of df
     results = Parallel(n_jobs=n_jobs)(
         delayed(check_video_exists)(row, video_dir, cache_name) for _, row in df.iterrows()
     )
@@ -76,7 +75,23 @@ def cache_mappings(file_name, data=None):
         with open(file_name, 'wb') as f:
             pickle.dump(data, f)
 
+
 def createStats(df, name, type_of_data="training"):
+    """
+    Generates and prints statistics for a given dataset.
+
+    Parameters:
+    df (pandas.DataFrame): The DataFrame containing the dataset.
+    name (str): The name of the dataset.
+    type_of_data (str, optional): The type of data (e.g., "training", "validation"). Default is "training".
+
+    This function calculates and prints the following statistics for the given dataset:
+    - The number of unique labels.
+    - The most common label and its count.
+    - The least common label and its count.
+    - The proportion of the most common label.
+
+    """
     df_val_counts = df.value_counts()
     uniqueLabels = df_val_counts.index        
     print(f'Unique labels in {name} dataset: {len(uniqueLabels)} ') 
