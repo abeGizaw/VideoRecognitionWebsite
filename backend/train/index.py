@@ -6,7 +6,9 @@ import pandas as pd
 from trainHelper import load_training_data, load_validation_data, createStats
 from torchvision.models.video import swin3d_b, Swin3D_B_Weights
 from videoCreator import create_dataloader
+from trainingMappings import index_to_label_k400, unwanted_labels
 import torch
+
 
 print('Loading Kinetics-700 dataset...')
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -47,19 +49,19 @@ jester_val_video_labels = pd.Series(jester_val_video_labels)
 
 
 # Create Stats
-createStats(jester_train_video_labels, "Jester", "training")
-createStats(jester_val_video_labels, "Jester", "validation")
-createStats(train_video_labels_series, "Kinetics", "training")
-createStats(val_video_labels_series, "Kinetics", "validation")
-createStats(pd.concat([jester_train_video_labels, train_video_labels_series]), "Jester and Kinetics", "training")
-createStats(pd.concat([jester_val_video_labels, val_video_labels_series]), "Jester and Kinetics", "validation")
+# createStats(jester_train_video_labels, "Jester", "training")
+# createStats(jester_val_video_labels, "Jester", "validation")
+# createStats(train_video_labels_series, "Kinetics", "training")
+# createStats(val_video_labels_series, "Kinetics", "validation")
+# createStats(pd.concat([jester_train_video_labels, train_video_labels_series]), "Jester and Kinetics", "training")
+# createStats(pd.concat([jester_val_video_labels, val_video_labels_series]), "Jester and Kinetics", "validation")
 
 jester_train_df = pd.DataFrame({
     'video_path': jesterVideo_train_paths, 
     'label': jester_train_video_labels
 })
 jester_train_df = jester_train_df[
-    ~jester_train_df['label'].isin(["Doing other things", "no gesture"])
+    ~jester_train_df['label'].isin(unwanted_labels)
 ]
 
 jester_test_df = pd.DataFrame({
@@ -67,13 +69,19 @@ jester_test_df = pd.DataFrame({
     'label': jester_val_video_labels
 })
 jester_test_df = jester_test_df[
-    ~jester_test_df['label'].isin(["Doing other things", "no gesture"])
+    ~jester_test_df['label'].isin(unwanted_labels)
 ]
     
 kinetics_train_df = pd.DataFrame({
     'video_path': train_video_paths,
     'label': train_video_labels
 })
+
+kinetics_400_labels = set(index_to_label_k400.values())
+
+kinetics_train_filtered_df = kinetics_train_df[
+    ~kinetics_train_df['label'].isin(kinetics_400_labels)
+]
 
 kinetics_test_df = pd.DataFrame({
     'video_path': val_video_paths,
@@ -82,19 +90,32 @@ kinetics_test_df = pd.DataFrame({
 
 mock_test_data = kinetics_test_df.head()
 
+kinetics_test_filtered_df = kinetics_test_df[
+    ~kinetics_test_df['label'].isin(kinetics_400_labels)
+]
+
+# Display the shapes to confirm the filtering
+print("Filtered Kinetics Train DataFrame Shape:", kinetics_train_filtered_df.shape, "vs Original:", kinetics_train_df.shape)
+print("Filtered Kinetics Test DataFrame Shape:", kinetics_test_filtered_df.shape, "vs Original:", kinetics_test_df.shape)
+
+# # Display a few rows to confirm the filtering worked
+# print("Filtered Kinetics Train DataFrame Head:")
+# print(kinetics_train_filtered_df.head())
+# print("Filtered Kinetics Test DataFrame Head:")
+# print(kinetics_test_filtered_df.head())
+
+
 # jester_top2_labels = jester_train_df['label'].value_counts().nlargest(2).index
 # jester_top2_df = jester_train_df[jester_train_df['label'].isin(jester_top2_labels)][:2000]
 kinetics_top2_labels = kinetics_train_df['label'].value_counts().nlargest(2).index
 kinetics_top2_df = kinetics_train_df[kinetics_train_df['label'].isin(kinetics_top2_labels)]
-kinetics_hangman_df = kinetics_train_df[kinetics_train_df['label'].str.contains("dancing gangnam style", case=False, na=False)]
-mock_train_data = pd.concat([kinetics_top2_df, kinetics_hangman_df], ignore_index=True)
+kinetics_gangman_df = kinetics_train_df[kinetics_train_df['label'].str.contains("dancing gangnam style", case=False, na=False)]
+mock_train_data = pd.concat([kinetics_top2_df, kinetics_gangman_df], ignore_index=True)
 # mock_train_data = pd.concat([jester_top2_df, kinetics_top2_df, kinetics_hangman_df], ignore_index=True)
 
 print('mock labels being used ', mock_train_data['label'].value_counts())
-
-print(mock_train_data.head())
-print(mock_train_data.shape)
-
+print('mock data', mock_train_data.head())
+print('test data' ,mock_test_data)
 
 # Load the model with the KINETICS400_IMAGENET22K_V1 pre-trained weights
 weights = Swin3D_B_Weights.KINETICS400_IMAGENET22K_V1
@@ -118,5 +139,26 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("device: ", device)  
 model.to(device)
 dataloader = create_dataloader(mock_test_data['video_path'], num_frames=16, batch_size=5, preprocess=preprocess)
-for i, batch in enumerate(dataloader):
-    print(f"Batch {i+1} shape: {batch.shape}")
+
+predicted_labels_list = []
+true_labels_list = []
+
+with torch.no_grad(): 
+    for i, batch in enumerate(dataloader):
+        batch = batch.to(device)  
+        # Get model predictions
+        outputs = model(batch)
+        # Get predicted labels (e.g., using argmax for classification)
+        predicted_labels = torch.argmax(outputs, dim=1)
+        
+        # Print out the results for testing
+        predicted_labels = [index_to_label_k400.get(idx, f"unknown_{idx}") for idx in [278, 0, 0, 0, 0]]
+        predicted_labels_list.extend(predicted_labels)
+        
+        # Collect true labels from the test DataFrame
+        true_labels = [index_to_label_k400.get(label, label) for label in mock_test_data['label']]
+        true_labels_list.extend(true_labels[:len(predicted_labels)])
+        
+        print(f"Batch {i+1} predictions:", predicted_labels)
+        print(f"Batch {i+1} true labels:", true_labels[:len(predicted_labels)])
+        break
