@@ -5,8 +5,9 @@ from torchvision.io import read_video
 from torch.utils.data import DataLoader, Dataset
 
 class VideoDataset(Dataset):
-    def __init__(self, video_paths, num_frames=32, transform=None):
+    def __init__(self, video_paths, video_labels, num_frames=32, transform=None):
         self.video_paths = video_paths
+        self.video_labels = video_labels
         self.num_frames = num_frames
         self.transform = transform
 
@@ -18,6 +19,7 @@ class VideoDataset(Dataset):
 
     def __getitem__(self, idx):
         video_path = self.video_paths[idx]
+        video_label = self.video_labels[idx]   
 
         if os.path.isdir(video_path):
             self._load_images_from_dir(video_path); # Skip directories for now (Jester)
@@ -44,10 +46,10 @@ class VideoDataset(Dataset):
         if self.transform:
             video = self.transform(video)
         
-        return video
+        return video,video_label
 
 # Function to create a DataLoader for the videos
-def create_dataloader(video_paths, num_frames=32, batch_size=5, preprocess=None):
-    dataset = VideoDataset(video_paths, num_frames=num_frames, transform=preprocess)
+def create_dataloader(video_paths,video_labels,  num_frames=32, batch_size=5, preprocess=None):
+    dataset = VideoDataset(video_paths, video_labels, num_frames=num_frames, transform=preprocess)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
     return dataloader
