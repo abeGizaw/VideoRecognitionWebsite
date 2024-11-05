@@ -6,7 +6,7 @@ import pandas as pd
 from trainHelper import load_training_data, load_validation_data, createStats
 from torchvision.models.video import swin3d_b, Swin3D_B_Weights
 from videoCreator import create_dataloader
-from trainingMappings import index_to_label_k400, unwanted_labels, new_classes
+from trainingMappings import index_to_label_k400, unwanted_labels, new_classes, label_to_index_k400
 import torch
  
  
@@ -97,12 +97,7 @@ kinetics_test_base_df = kinetics_test_df[
 ]
 
 mock_test_data = kinetics_test_base_df.iloc[50:100].reset_index(drop=True)
-print('mock test data', mock_test_data)
-unique_labels = sorted(set(mock_test_data['label']))
-print('unique labels', unique_labels)
-label_to_index = {label: idx for idx, label in enumerate(unique_labels)}
-print('label to index', label_to_index)
-mock_test_data['label_index'] = mock_test_data['label'].map(label_to_index)
+mock_test_data['label_index'] = mock_test_data['label'].map(label_to_index_k400)
 print('mock test data', mock_test_data['label_index'])
 print('\n')
 
@@ -196,6 +191,7 @@ dataloader = create_dataloader(
 correct_predictions = 0
 top5_correct_predictions = 0
 total_predictions = 0
+wrong_paths = []
 
 with open("results.txt", "w") as f:
     with torch.no_grad():
@@ -216,7 +212,7 @@ with open("results.txt", "w") as f:
             # Convert indices to labels
             predicted_labels_mapped = [index_to_label_k400.get(idx, f"unknown_{idx}") for idx in predicted_labels]
             top_5_mapped = [[index_to_label_k400.get(idx, f"unknown_{idx}") for idx in indices] for indices in top_5]           
-            true_labels_mapped = [label_to_index.get(label, label) for label in labels]
+            true_labels_mapped = [index_to_label_k400.get(label, label) for label in labels]
 
             # Calculate accuracy
             correct_predictions += sum(pred == true for pred, true in zip(predicted_labels, labels))
@@ -225,10 +221,26 @@ with open("results.txt", "w") as f:
 
             print(predicted_labels)
             print(labels)
+            print(top_5)
+
+
+            # Track the paths of videos with incorrect top-5 predictions
+            # Track the paths of videos with incorrect top-5 predictions
+            batch_start = i * dataloader.batch_size
+            batch_video_paths = list(dataloader.dataset.video_paths[batch_start : batch_start + len(labels)])
+            
+            # Print for debugging purposes
+            for j, true_label in enumerate(labels):
+                if j < len(batch_video_paths) and true_label not in top_5[j]:
+                    wrong_paths.append((batch_video_paths[j], top_5_mapped[j])) 
+
 
             f.write(f"Batch {i+1} predictions: {predicted_labels_mapped}\n")
             f.write(f"Batch {i+1} true labels: {true_labels_mapped}\n")
-            f.write(f"Batch {i+1} top 5 predictions: {top_5_mapped}\n")
+            f.write(f"Batch {i+1} top 5 predictions:\n")
+            for entry in top_5_mapped:
+                f.write(f"{entry}\n")
+            f.write("\n")
            
             
 
@@ -236,3 +248,7 @@ accuracy = correct_predictions / total_predictions
 top5_accuracy = top5_correct_predictions / total_predictions
 print(f"Accuracy: {accuracy:.4f}")
 print(f"Top-5 Accuracy: {top5_accuracy:.4f}")
+
+with open("wrong_paths.txt", "w") as wrong_path:
+    for (path, top_5) in wrong_paths:
+        wrong_path.write(f"\n {path} \n {top_5}\n")
