@@ -1,0 +1,3 @@
+Batch 1 predictions: ['rock climbing', 'abseiling', 'abseiling', 'abseiling', 'abseiling']
+Batch 1 true labels: ['abseiling', 'abseiling', 'abseiling', 'abseiling', 'abseiling']
+Batch 1 top 5 predictions: [['rock climbing', 'abseiling', 'climbing a rope', 'climbing ladder', 'ice climbing'], ['abseiling', 'rock climbing', 'climbing a rope', 'swinging on something', 'ice climbing'], ['abseiling', 'rock climbing', 'climbing ladder', 'slacklining', 'climbing tree'], ['abseiling', 'cleaning windows', 'swinging on something', 'ironing', 'trapezing'], ['abseiling', 'bungee jumping', 'parkour', 'swinging on something', 'trapezing']]

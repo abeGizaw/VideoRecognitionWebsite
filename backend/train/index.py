@@ -129,46 +129,46 @@ preprocess = weights.transforms()
 MOCKING TRAIN DATA
 # """
 # Create a dataloader for the mock training data
-dataloader = create_dataloader(mock_train_data['video_path'], mock_train_data['label'].index, num_frames=16, batch_size=50, preprocess=preprocess)
+# dataloader = create_dataloader(mock_train_data['video_path'], mock_train_data['label'].index, num_frames=16, batch_size=50, preprocess=preprocess)
  
  
-number_features = model.head.in_features
-model.head = torch.nn.Linear(number_features, number_features + len(strings))
-# Freeze the model parameters
-for param in model.parameters():
-    param.requires_grad = False
-# Train final layer
-for param in model.head.parameters():
-    param.requires_grad = True
+# number_features = model.head.in_features
+# model.head = torch.nn.Linear(number_features, number_features + len(strings))
+# # Freeze the model parameters
+# for param in model.parameters():
+#     param.requires_grad = False
+# # Train final layer
+# for param in model.head.parameters():
+#     param.requires_grad = True
  
  
-# Train the model and optimizer
-optimizer = optim.SGD(model.parameters(), lr=0.01)
-criterion = torch.nn.CrossEntropyLoss()
+# # Train the model and optimizer
+# optimizer = optim.SGD(model.parameters(), lr=0.01)
+# criterion = torch.nn.CrossEntropyLoss()
  
  
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-num_epochs = 1
-running_loss = 0.0
-for epoch in range(num_epochs):
-    model.train()
-    for i, batch in enumerate(dataloader):
-        inputs, labels = batch
-        inputs = inputs.to(device)
-        labels = labels.to(device)
+# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# num_epochs = 1
+# running_loss = 0.0
+# for epoch in range(num_epochs):
+#     model.train()
+#     for i, batch in enumerate(dataloader):
+#         inputs, labels = batch
+#         inputs = inputs.to(device)
+#         labels = labels.to(device)
         
-        optimizer.zero_grad()
-        outputs = model(batch)
-        loss = criterion(outputs, labels)
-        loss.backward()
-        optimizer.step()
-        running_loss += loss.item() * inputs.size(0)
+#         optimizer.zero_grad()
+#         outputs = model(batch)
+#         loss = criterion(outputs, labels)
+#         loss.backward()
+#         optimizer.step()
+#         running_loss += loss.item() * inputs.size(0)
  
-    epoch_loss = running_loss / len(dataloader.dataset)
-    print(f'Epoch {epoch+1}/{num_epochs}, Loss: {epoch_loss:.4f}')
+#     epoch_loss = running_loss / len(dataloader.dataset)
+#     print(f'Epoch {epoch+1}/{num_epochs}, Loss: {epoch_loss:.4f}')
  
-# Save the model
-torch.save(model.state_dict(), 'oneEpochTrain.pth')
+# # Save the model
+# torch.save(model.state_dict(), 'oneEpochTrain.pth')
  
 # for i, batch in enumerate(dataloader):
 #     print(f"Batch {i+1} shape: {batch.shape}")
@@ -179,36 +179,44 @@ torch.save(model.state_dict(), 'oneEpochTrain.pth')
 """
 MOCKING MODEL ON TEST DATA
 """
-# model.eval()
-# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-# print("device: ", device)  
-# model.to(device)
-# dataloader = create_dataloader(mock_test_data['video_path'], mock_test_data['label'],num_frames=16, batch_size=5, preprocess=preprocess)
+model.eval()
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print("device: ", device)  
+model.to(device)
+dataloader = create_dataloader(mock_test_data['video_path'], mock_test_data['label'],num_frames=16, batch_size=5, preprocess=preprocess)
  
  
-# with open("results.txt", "w") as f:
-#     with torch.no_grad():
-#         for i, (batch, label) in enumerate(dataloader):
-#             batch = batch.to(device)  
-#             # Get model predictions
-#             outputs = model(batch)
-#             # Get predicted labels (e.g., using argmax for classification)
-#             predicted_labels = torch.argmax(outputs, dim=1)
-#             top_5 = torch.topk(outputs, 5).indices
- 
-#             for index in predicted_labels:
-#                 print(index)
-           
-#             # Print out the results for testing
-#             predicted_labels = [index_to_label_k400.get(idx, f"unknown_{idx}") for idx in predicted_labels.tolist()]
-#             top_5 = [[index_to_label_k400.get(idx, f"unknown_{idx}") for idx in indices] for indices in top_5.tolist()]
-           
-#             # Collect true labels from the test DataFrame
-#             true_labels = [index_to_label_k400.get(label, label) for label in mock_test_data['label']]
-           
-#             f.write(f"Batch {i+1} predictions: {predicted_labels}\n")
-#             f.write(f"Batch {i+1} true labels: {true_labels}\n")
-#             f.write(f"Batch {i+1} top 5 predictions: {top_5}\n")
-           
-#             break
+correct_predictions = 0
+top5_correct_predictions = 0
+total_predictions = 0
 
+with open("results.txt", "w") as f:
+    with torch.no_grad():
+        for i, (batch, label) in enumerate(dataloader):
+            batch = batch.to(device)  
+
+            # Get model predictions
+            outputs = model(batch)
+            predicted_labels = torch.argmax(outputs, dim=1)
+            top_5 = torch.topk(outputs, 5).indices
+        
+            # Print out the results for testing
+            predicted_labels = [index_to_label_k400.get(idx, f"unknown_{idx}") for idx in predicted_labels.tolist()]
+            top_5 = [[index_to_label_k400.get(idx, f"unknown_{idx}") for idx in indices] for indices in top_5.tolist()]           
+            true_labels = [index_to_label_k400.get(label, label) for label in mock_test_data['label']]
+
+            # Calculate accuracy
+            correct_predictions += sum(pred == true for pred, true in zip(predicted_labels, true_labels))
+            top5_correct_predictions += sum(true in top_5[i] for i, true in enumerate(true_labels))
+            total_predictions += len(true_labels)
+            
+            f.write(f"Batch {i+1} predictions: {predicted_labels}\n")
+            f.write(f"Batch {i+1} true labels: {true_labels}\n")
+            f.write(f"Batch {i+1} top 5 predictions: {top_5}\n")
+           
+            break
+
+accuracy = correct_predictions / total_predictions
+top5_accuracy = top5_correct_predictions / total_predictions
+print(f"Accuracy: {accuracy:.4f}")
+print(f"Top-5 Accuracy: {top5_accuracy:.4f}")
