@@ -1,5 +1,5 @@
 """
-CAN ONLY RUN THIS FILE ON ROSE SERVER
+CAN ONLY RUN THIS FILE ON ROSE SERVER, Ian was here
 """
 import os
 import pandas as pd
@@ -8,7 +8,6 @@ from torchvision.models.video import swin3d_b, Swin3D_B_Weights
 from videoCreator import create_dataloader
 from trainingMappings import index_to_label_k400, unwanted_labels
 import torch
-import torch.optim as optim
  
  
 print('Loading Kinetics-700 dataset...')
@@ -88,37 +87,41 @@ kinetics_test_df = pd.DataFrame({
     'video_path': val_video_paths,
     'label': val_video_labels
 })
- 
-mock_test_data = kinetics_test_df.head().reset_index(drop=True)
+
  
 kinetics_test_filtered_df = kinetics_test_df[
     ~kinetics_test_df['label'].isin(kinetics_400_labels)
 ]
- 
+kinetics_test_base_df = kinetics_test_df[
+    kinetics_test_df['label'].isin(kinetics_400_labels)
+]
+
+mock_test_data = kinetics_test_base_df.iloc[50:100].reset_index(drop=True)
+print('mock test data', mock_test_data)
+unique_labels = sorted(set(mock_test_data['label']))
+print('unique labels', unique_labels)
+label_to_index = {label: idx for idx, label in enumerate(unique_labels)}
+print('label to index', label_to_index)
+mock_test_data['label_index'] = mock_test_data['label'].map(label_to_index)
+print('mock test data', mock_test_data['label_index'])
+print('\n')
+
 # Display the shapes to confirm the filtering
 print("Filtered Kinetics Train DataFrame Shape:", kinetics_train_filtered_df.shape, "vs Original:", kinetics_train_df.shape)
 print("Filtered Kinetics Test DataFrame Shape:", kinetics_test_filtered_df.shape, "vs Original:", kinetics_test_df.shape)
  
-# # Display a few rows to confirm the filtering worked
-# print("Filtered Kinetics Train DataFrame Head:")
-# print(kinetics_train_filtered_df.head())
-# print("Filtered Kinetics Test DataFrame Head:")
-# print(kinetics_test_filtered_df.head())
  
-strings = ['adjusting glasses', 'acting in play', 'alligator wrestling']
- 
-# jester_top2_labels = jester_train_df['label'].value_counts().nlargest(2).index
-# jester_top2_df = jester_train_df[jester_train_df['label'].isin(jester_top2_labels)][:2000]
-kinetics_top2_labels = kinetics_train_df['label'].value_counts().nlargest(2).index
-kinetics_top2_df = kinetics_train_df[kinetics_train_df['label'].isin(kinetics_top2_labels)]
-kinetics_strings_df = kinetics_train_df[kinetics_train_df['label'].isin(strings)]
+classes = ['adjusting glasses', 'acting in play', 'alligator wrestling']
+# kinetics_top2_labels = kinetics_train_df['label'].value_counts().nlargest(2).index
+# kinetics_top2_df = kinetics_train_df[kinetics_train_df['label'].isin(kinetics_top2_labels)]
+kinetics_strings_df = kinetics_train_df[kinetics_train_df['label'].isin(classes)]
 mock_train_data = kinetics_strings_df.reset_index(drop=True)
 #mock_train_data = pd.concat([kinetics_top2_df, kinetics_gangman_df], ignore_index=True)
 # mock_train_data = pd.concat([jester_top2_df, kinetics_top2_df, kinetics_hangman_df], ignore_index=True)
  
 print('mock labels being used ', mock_train_data['label'].value_counts())
-print('mock data', mock_train_data.head())
-print('test data' ,mock_test_data)
+# print('mock data', mock_train_data.head())
+# print('test data' ,mock_test_data)
  
 # Load the model with the KINETICS400_IMAGENET22K_V1 pre-trained weights
 weights = Swin3D_B_Weights.KINETICS400_IMAGENET22K_V1
@@ -127,7 +130,7 @@ preprocess = weights.transforms()
  
 """
 MOCKING TRAIN DATA
-# """
+"""
 # Create a dataloader for the mock training data
 # dataloader = create_dataloader(mock_train_data['video_path'], mock_train_data['label'].index, num_frames=16, batch_size=50, preprocess=preprocess)
  
@@ -183,8 +186,13 @@ model.eval()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("device: ", device)  
 model.to(device)
-dataloader = create_dataloader(mock_test_data['video_path'], mock_test_data['label'],num_frames=16, batch_size=5, preprocess=preprocess)
- 
+dataloader = create_dataloader(
+    video_paths=mock_test_data['video_path'],
+    video_labels=mock_test_data['label_index'], 
+    num_frames=16,
+    batch_size=5,
+    preprocess=preprocess
+) 
  
 correct_predictions = 0
 top5_correct_predictions = 0
@@ -194,27 +202,36 @@ with open("results.txt", "w") as f:
     with torch.no_grad():
         for i, (batch, label) in enumerate(dataloader):
             batch = batch.to(device)  
+            label = label.to(device)
 
             # Get model predictions
             outputs = model(batch)
             predicted_labels = torch.argmax(outputs, dim=1)
             top_5 = torch.topk(outputs, 5).indices
         
-            # Print out the results for testing
-            predicted_labels = [index_to_label_k400.get(idx, f"unknown_{idx}") for idx in predicted_labels.tolist()]
-            top_5 = [[index_to_label_k400.get(idx, f"unknown_{idx}") for idx in indices] for indices in top_5.tolist()]           
-            true_labels = [index_to_label_k400.get(label, label) for label in mock_test_data['label']]
+            # Convert predictions and labels to lists of indices for comparison
+            predicted_labels = predicted_labels.cpu().tolist()
+            labels = label.cpu().tolist()
+            top_5 = top_5.cpu().tolist()          
+
+            # Convert indices to labels
+            predicted_labels_mapped = [index_to_label_k400.get(idx, f"unknown_{idx}") for idx in predicted_labels]
+            top_5_mapped = [[index_to_label_k400.get(idx, f"unknown_{idx}") for idx in indices] for indices in top_5]           
+            true_labels_mapped = [label_to_index.get(label, label) for label in labels]
 
             # Calculate accuracy
-            correct_predictions += sum(pred == true for pred, true in zip(predicted_labels, true_labels))
-            top5_correct_predictions += sum(true in top_5[i] for i, true in enumerate(true_labels))
-            total_predictions += len(true_labels)
-            
-            f.write(f"Batch {i+1} predictions: {predicted_labels}\n")
-            f.write(f"Batch {i+1} true labels: {true_labels}\n")
-            f.write(f"Batch {i+1} top 5 predictions: {top_5}\n")
+            correct_predictions += sum(pred == true for pred, true in zip(predicted_labels, labels))
+            top5_correct_predictions += sum(true in top_5[i] for i, true in enumerate(labels))
+            total_predictions += len(labels)
+
+            print(predicted_labels)
+            print(labels)
+
+            f.write(f"Batch {i+1} predictions: {predicted_labels_mapped}\n")
+            f.write(f"Batch {i+1} true labels: {true_labels_mapped}\n")
+            f.write(f"Batch {i+1} top 5 predictions: {top_5_mapped}\n")
            
-            break
+            
 
 accuracy = correct_predictions / total_predictions
 top5_accuracy = top5_correct_predictions / total_predictions

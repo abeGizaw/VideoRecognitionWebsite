@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader, Dataset
 class VideoDataset(Dataset):
     def __init__(self, video_paths, video_labels, num_frames=32, transform=None):
         self.video_paths = video_paths
-        self.video_labels = video_labels
+        self.video_labels = torch.tensor(video_labels.tolist(), dtype=torch.long)
         self.num_frames = num_frames
         self.transform = transform
 
