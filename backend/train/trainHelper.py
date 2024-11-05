@@ -104,26 +104,3 @@ def createStats(df, name, type_of_data="training"):
     print(f"{name} most common {type_of_data} label: {most_common_label} with {most_common_count} videos out of {len(df)}.")
     print(f"{name} least common {type_of_data} label: {least_common_label} with {least_common_count} videos out of {len(df)}.")
     print(f"{name} proportion of most common {type_of_data} label: {most_common_proportion} \n")
-
-def extractFeatures(data_loader, model):
-    """
-    Extracts features from a given data loader using a given model.
-
-    Parameters:
-    data_loader (torch.utils.data.DataLoader): The DataLoader containing the data.
-    model (torch.nn.Module): The model used to extract features.
-
-    Returns:
-    torch.Tensor: The extracted features.
-
-    """
-    features = []
-    labels = []
-    model.eval()
-    with torch.no_grad():
-        for batch, batch_label in data_loader:
-            output = model(batch)
-            features.append(output)
-            labels.extend(batch_label.torch())
-
-    return torch.cat(features), torch.tensor(labels)

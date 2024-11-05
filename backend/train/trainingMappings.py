@@ -402,3 +402,4 @@ index_to_label_k400 = {
 }
 
 unwanted_labels = ["Doing other things", "no gesture"]
+new_classes = ['adjusting glasses', 'acting in play', 'alligator wrestling']
