@@ -1,12 +1,12 @@
 """
-CAN ONLY RUN THIS FILE ON ROSE SERVER, Ian was here
+CAN ONLY RUN THIS FILE ON ROSE SERVER
 """
 import os
 import pandas as pd
-from trainHelper import load_training_data, load_validation_data, createStats, extractFeatures
+from trainHelper import load_training_data, load_validation_data, createStats
 from torchvision.models.video import swin3d_b, Swin3D_B_Weights
 from videoCreator import create_dataloader
-from trainingMappings import index_to_label_k400, unwanted_labels
+from trainingMappings import index_to_label_k400, unwanted_labels, new_classes
 import torch
  
  
@@ -111,10 +111,9 @@ print("Filtered Kinetics Train DataFrame Shape:", kinetics_train_filtered_df.sha
 print("Filtered Kinetics Test DataFrame Shape:", kinetics_test_filtered_df.shape, "vs Original:", kinetics_test_df.shape)
  
  
-classes = ['adjusting glasses', 'acting in play', 'alligator wrestling']
 # kinetics_top2_labels = kinetics_train_df['label'].value_counts().nlargest(2).index
 # kinetics_top2_df = kinetics_train_df[kinetics_train_df['label'].isin(kinetics_top2_labels)]
-kinetics_strings_df = kinetics_train_df[kinetics_train_df['label'].isin(classes)]
+kinetics_strings_df = kinetics_train_df[kinetics_train_df['label'].isin(new_classes)]
 mock_train_data = kinetics_strings_df.reset_index(drop=True)
 #mock_train_data = pd.concat([kinetics_top2_df, kinetics_gangman_df], ignore_index=True)
 # mock_train_data = pd.concat([jester_top2_df, kinetics_top2_df, kinetics_hangman_df], ignore_index=True)
