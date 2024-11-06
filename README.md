@@ -17,7 +17,7 @@ git clone https://github.com/abeGizaw/VideoRecognitionWebsite.git
 ### 2. **Checkout the Local Development Branch**
 After cloning the repository, navigate into the project directory and switch to the `local_dev` branch:
 ```bash
-git checkout local_decd VideoRecognitionWebsite
+cd VideoRecognitionWebsite
 git checkout local_dev
 ```
 
