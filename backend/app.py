@@ -5,8 +5,8 @@ import os
 
 # Initialize the Flask app
 app = Flask(__name__)
-# CORS(app, resources={r"/upload": {"origins": "https://what-tha-vid-do.web.app"}})
-CORS(app, resources={r"/upload": {"origins": "http://localhost:3000"}})
+CORS(app, resources={r"/upload": {"origins": "https://what-tha-vid-do.web.app"}})
+# CORS(app, resources={r"/upload": {"origins": "http://localhost:3000"}})
 
 
 

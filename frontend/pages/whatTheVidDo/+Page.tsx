@@ -45,19 +45,8 @@ export const Page = () => {
         formData.append('file', videoFile);
         setMessage('Uploading file...');
 
-        // const uploadResponse = await fetch(
-        //   `${import.meta.env.VITE_BACKEND_URL}/upload`,
-        //   {
-        //     method: 'POST',
-        //     body: formData,
-        //     headers: {
-        //       Accept: 'application/json',
-        //     },
-        //   },
-        // );
-
         const uploadResponse = await fetch(
-          `http://127.0.0.1:8080/upload`,  // Flask server local URL
+          `${import.meta.env.VITE_BACKEND_URL}/upload`,
           {
             method: 'POST',
             body: formData,
@@ -66,6 +55,17 @@ export const Page = () => {
             },
           },
         );
+
+        // const uploadResponse = await fetch(
+        //   `http://127.0.0.1:8080/upload`,  // Flask server local URL
+        //   {
+        //     method: 'POST',
+        //     body: formData,
+        //     headers: {
+        //       Accept: 'application/json',
+        //     },
+        //   },
+        // );
 
         if (uploadResponse.ok) {
           const result = await uploadResponse.json();
