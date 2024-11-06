@@ -46,7 +46,7 @@ export const Page = () => {
         setMessage('Uploading file...');
 
         const uploadResponse = await fetch(
-          `${import.meta.env.VITE_BACKEND_URL}/upload`,
+          `${"https://my-backend-app-1001376648512.us-central1.run.app"}/upload`,
           {
             method: 'POST',
             body: formData,

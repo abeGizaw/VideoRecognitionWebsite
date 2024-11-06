@@ -38,7 +38,7 @@ export const Recorder = ({ setMessage }: RecorderProps) => {
         ]);
 
         const uploadResponse = await fetch(
-          `${import.meta.env.VITE_BACKEND_URL}/upload?source=chatBot`,
+          `${'https://my-backend-app-1001376648512.us-central1.run.app'}/upload?source=chatBot`,
           {
             method: 'POST',
             body: formData,
