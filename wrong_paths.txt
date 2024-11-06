@@ -1,0 +1,27 @@
+
+ /work/cssema416/202510/05/05/VideoRecognitionWebsite/backend/train/../../../data/kinetics-dataset/k700-2020/val/air drumming/w-KypbhLWI4_000221_000231.mp4 
+ ['pumping fist', 'headbanging', 'swing dancing', 'dancing macarena', 'dancing charleston']
+
+ /work/cssema416/202510/05/05/VideoRecognitionWebsite/backend/train/../../../data/kinetics-dataset/k700-2020/val/air drumming/vrr9XZxdQQ8_000004_000014.mp4 
+ ['slapping', 'rock scissors paper', 'shaking hands', 'punching bag', 'pumping fist']
+
+ /work/cssema416/202510/05/05/VideoRecognitionWebsite/backend/train/../../../data/kinetics-dataset/k700-2020/val/air drumming/-8khhEKByEM_000006_000016.mp4 
+ ['shaking hands', 'singing', 'pumping fist', 'dancing macarena', 'clapping']
+
+ /work/cssema416/202510/05/05/VideoRecognitionWebsite/backend/train/../../../data/kinetics-dataset/k700-2020/val/air drumming/nK07TuR-L1s_000017_000027.mp4 
+ ['jogging', 'walking the dog', 'riding unicycle', 'robot dancing', 'throwing ball']
+
+ /work/cssema416/202510/05/05/VideoRecognitionWebsite/backend/train/../../../data/kinetics-dataset/k700-2020/val/air drumming/WbSeDXl2_II_000002_000012.mp4 
+ ['high kick', 'cartwheeling', 'jumpstyle dancing', 'drop kicking', 'side kick']
+
+ /work/cssema416/202510/05/05/VideoRecognitionWebsite/backend/train/../../../data/kinetics-dataset/k700-2020/val/air drumming/xBwOh9LMf1E_000003_000013.mp4 
+ ['slapping', 'playing monopoly', 'drop kicking', 'waxing legs', 'headbutting']
+
+ /work/cssema416/202510/05/05/VideoRecognitionWebsite/backend/train/../../../data/kinetics-dataset/k700-2020/val/air drumming/PlNh0CaWWX4_000025_000035.mp4 
+ ['pumping fist', 'headbanging', 'dancing gangnam style', 'somersaulting', 'brushing hair']
+
+ /work/cssema416/202510/05/05/VideoRecognitionWebsite/backend/train/../../../data/kinetics-dataset/k700-2020/val/air drumming/PmDtIrDb9vY_000013_000023.mp4 
+ ['cracking neck', 'headbanging', 'beatboxing', 'slapping', 'finger snapping']
+
+ /work/cssema416/202510/05/05/VideoRecognitionWebsite/backend/train/../../../data/kinetics-dataset/k700-2020/val/answering questions/eIqQAqJPM6Q_000088_000098.mp4 
+ ['fixing hair', 'beatboxing', 'cracking neck', 'brushing hair', 'singing']
