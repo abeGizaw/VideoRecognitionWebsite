@@ -164,8 +164,9 @@ MOCKING TRAIN DATA
 #     epoch_loss = running_loss / len(dataloader.dataset)
 #     print(f'Epoch {epoch+1}/{num_epochs}, Loss: {epoch_loss:.4f}')
  
-# # Save the model
-# torch.save(model.state_dict(), 'oneEpochTrain.pth')
+# Save the model
+model_path = os.path.join(current_dir, '../models/trained_swin_model.pth')
+torch.save(model.state_dict(), model_path)
  
 # for i, batch in enumerate(dataloader):
 #     print(f"Batch {i+1} shape: {batch.shape}")
