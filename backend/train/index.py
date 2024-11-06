@@ -96,7 +96,7 @@ kinetics_test_base_df = kinetics_test_df[
     kinetics_test_df['label'].isin(kinetics_400_labels)
 ]
 
-mock_test_data = kinetics_test_base_df.iloc[50:100].reset_index(drop=True)
+mock_test_data = kinetics_test_base_df.iloc[50:60].reset_index(drop=True)
 mock_test_data['label_index'] = mock_test_data['label'].map(label_to_index_k400)
 print('mock test data', mock_test_data['label_index'])
 print('\n')
