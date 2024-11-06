@@ -1,15 +1,14 @@
 import torch
 from torchvision.models.video import swin3d_b, Swin3D_B_Weights
-
-from videoCreator import create_dataloader
-from trainingMappings import index_to_label_k400, label_to_index_k400
-
+from train.trainingMappings import index_to_label_k400
+from train.videoCreator import create_dataloader
 def process_video(file_path):
     """
     Takes in the video path, processes it with the CNN model, 
     and returns the result.
     """
     print(f"Processing video at {file_path}")
+    result = ""
 
     weights = Swin3D_B_Weights.KINETICS400_IMAGENET22K_V1
     model = swin3d_b(weights=weights)
