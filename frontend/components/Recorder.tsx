@@ -47,6 +47,16 @@ export const Recorder = ({ setMessage }: RecorderProps) => {
             },
           },
         );
+        // const uploadResponse = await fetch(
+        //   `http://127.0.0.1:8080/upload?source=chatBot`,
+        //   {
+        //     method: 'POST',
+        //     body: formData,
+        //     headers: {
+        //       Accept: 'application/json',
+        //     },
+        //   },
+        // );
 
         if (uploadResponse.ok) {
           const result = await uploadResponse.json();
