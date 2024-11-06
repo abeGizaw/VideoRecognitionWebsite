@@ -1,5 +1,5 @@
 *.pkl
-
+*.pth
 #node_modules
 node_modules
 
