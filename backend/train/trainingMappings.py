@@ -400,5 +400,8 @@ index_to_label_k400 = {
 398:"yoga",
 399:"zumba"
 }
+label_to_index_k400 = {label: idx for idx, label in index_to_label_k400.items()}
+
 
 unwanted_labels = ["Doing other things", "no gesture"]
+new_classes = ['adjusting glasses', 'acting in play', 'alligator wrestling']
