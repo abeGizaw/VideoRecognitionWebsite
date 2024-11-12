@@ -1,3 +1,8 @@
+import pandas as pd
+import os
+import shutil
+
+
 index_to_label_k400 = {
 0:"abseiling",
 1:"air drumming",
@@ -59,17 +64,17 @@ index_to_label_k400 = {
 57:"clapping",
 58:"clay pottery making",
 59:"clean and jerk",
-60:"cleaning floor",
+60:"cleaning floor",  #CLEANING
 61:"cleaning gutters",
 62:"cleaning pool",
 63:"cleaning shoes",
 64:"cleaning toilet",
 65:"cleaning windows",
-66:"climbing a rope",
+66:"climbing a rope", #CLIMBING
 67:"climbing ladder",
 68:"climbing tree",
 69:"contact juggling",
-70:"cooking chicken",
+70:"cooking chicken", #COOKING
 71:"cooking egg",
 72:"cooking on campfire",
 73:"cooking sausages",
@@ -108,7 +113,7 @@ index_to_label_k400 = {
 106:"drumming fingers",
 107:"dunking basketball",
 108:"dying hair",
-109:"eating burger",
+109:"eating burger", #EATING
 110:"eating cake",
 111:"eating carrots",
 112:"eating chips",
@@ -140,7 +145,7 @@ index_to_label_k400 = {
 138:"getting a haircut",
 139:"getting a tattoo",
 140:"giving or receiving award",
-141:"golf chipping",
+141:"golf chipping", #Golfing
 142:"golf driving",
 143:"golf putting",
 144:"grinding meat",
@@ -192,7 +197,7 @@ index_to_label_k400 = {
 190:"making sushi",
 191:"making tea",
 192:"marching",
-193:"massaging back",
+193:"massaging back", #MASSAGING
 194:"massaging feet",
 195:"massaging legs",
 196:"massaging person's head",
@@ -207,7 +212,7 @@ index_to_label_k400 = {
 205:"paragliding",
 206:"parasailing",
 207:"parkour",
-208:"passing American football (in game)",
+208:"passing American football (in game)", #PASSING FOOTBALL
 209:"passing American football (not in game)",
 210:"peeling apples",
 211:"peeling potatoes",
@@ -291,7 +296,7 @@ index_to_label_k400 = {
 289:"shaking head",
 290:"sharpening knives",
 291:"sharpening pencil",
-292:"shaving head",
+292:"shaving head", #SHAVING
 293:"shaving legs",
 294:"shearing sheep",
 295:"shining shoes",
@@ -306,7 +311,7 @@ index_to_label_k400 = {
 304:"singing",
 305:"situp",
 306:"skateboarding",
-307:"ski jumping",
+307:"ski jumping", #Skiing
 308:"skiing (not slalom or crosscountry)",
 309:"skiing crosscountry",
 310:"skiing slalom",
@@ -338,7 +343,7 @@ index_to_label_k400 = {
 336:"surfing crowd",
 337:"surfing water",
 338:"sweeping floor",
-339:"swimming backstroke",
+339:"swimming backstroke", #SWIMMING
 340:"swimming breast stroke",
 341:"swimming butterfly stroke",
 342:"swing dancing",
@@ -385,7 +390,7 @@ index_to_label_k400 = {
 383:"water skiing",
 384:"water sliding",
 385:"watering plants",
-386:"waxing back",
+386:"waxing back", #Waxing
 387:"waxing chest",
 388:"waxing eyebrows",
 389:"waxing legs",
@@ -398,10 +403,39 @@ index_to_label_k400 = {
 396:"writing",
 397:"yawning",
 398:"yoga",
-399:"zumba"
+399:"zumba",
+400:"adjusting glasses"
 }
 label_to_index_k400 = {label: idx for idx, label in index_to_label_k400.items()}
 
+#ADD: Splashing water, high fiving, bouncing ball, doing sudoku, ship dance, checking watch, playing slot machines, blending fruit, flipping bottle, milking goat
+
+
 
 unwanted_labels = ["Doing other things", "no gesture"]
-new_classes = ['adjusting glasses', 'acting in play', 'alligator wrestling']
+new_classes = ['adjusting glasses'] # , 'acting in play', 'alligator wrestling']
+
+
+generalized = ['cleaning', 'climbing', 'cooking', 'eating', 'golf', 'massaging', 'passing football', 'shaving', 'skiing', 'swimming', 'waxing']
+skipped_labels = ['disc golfing','ice climbing','rock climbing','cooking on campfire','trimming or shaving beard','water skiing','jetskiing']
+# df = pd.DataFrame(list(index_to_label_k400.items()))
+# df.to_csv('400mappings.csv',index=False)
+# print(os.getcwd())
+
+
+
+def combineLabels(mydir):
+    for newFolderName in generalized:
+        if not os.path.exists(newFolderName):
+            os.mkdir(newFolderName)
+        for folder in os.listdir(mydir):
+            if newFolderName in folder and folder in label_to_index_k400.keys() and folder not in skipped_labels:
+                folder = os.path.join(mydir, folder)
+                for i,file in enumerate(os.listdir(folder)):
+                    
+                    if i < 1:
+                        source = os.path.join(folder, file)
+                        destination = os.path.join(newFolderName, file)
+                        print("for label: ", newFolderName, "\nsource: ", source, "\ndestination: ", destination)
+                        print("\n")
+                        # shutil.move(source, destination)

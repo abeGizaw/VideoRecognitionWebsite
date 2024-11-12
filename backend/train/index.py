@@ -2,12 +2,15 @@
 CAN ONLY RUN THIS FILE ON ROSE SERVER
 """
 import os
+import time
 import pandas as pd
 from trainHelper import load_training_data, load_validation_data, createStats
 from torchvision.models.video import swin3d_b, Swin3D_B_Weights
 from videoCreator import create_dataloader
-from trainingMappings import index_to_label_k400, unwanted_labels, new_classes, label_to_index_k400
+from trainingMappings import index_to_label_k400, unwanted_labels, new_classes, label_to_index_k400,combineLabels,generalized
 import torch
+import torch.optim as optim
+
  
  
 print('Loading Kinetics-700 dataset...')
@@ -18,6 +21,8 @@ val_csv = os.path.join(annotations_path, 'val.csv')
 train_videos_dir = os.path.join(current_dir, '../../../data/kinetics-dataset/k700-2020/train')
 val_videos_dir = os.path.join(current_dir, '../../../data/kinetics-dataset/k700-2020/val')
  
+combineLabels(train_videos_dir)
+
 # Load CSV files
 train_df = pd.read_csv(train_csv)
 val_df = pd.read_csv(val_csv)
@@ -55,34 +60,35 @@ jester_val_video_labels = pd.Series(jester_val_video_labels)
 # createStats(val_video_labels_series, "Kinetics", "validation")
 # createStats(pd.concat([jester_train_video_labels, train_video_labels_series]), "Jester and Kinetics", "training")
 # createStats(pd.concat([jester_val_video_labels, val_video_labels_series]), "Jester and Kinetics", "validation")
- 
-jester_train_df = pd.DataFrame({
-    'video_path': jesterVideo_train_paths,
-    'label': jester_train_video_labels
-})
-jester_train_df = jester_train_df[
-    ~jester_train_df['label'].isin(unwanted_labels)
-]
- 
-jester_test_df = pd.DataFrame({
-    'video_path': jesterVideo_val_paths,
-    'label': jester_val_video_labels
-})
-jester_test_df = jester_test_df[
-    ~jester_test_df['label'].isin(unwanted_labels)
-]
+# jester_train_df = pd.DataFrame({
+#     'video_path': jesterVideo_train_paths,
+#     'label': jester_train_video_labels
+# })
+# jester_train_df = jester_train_df[
+#     ~jester_train_df['label'].isin(unwanted_labels)
+# ]
+# jester_test_df = pd.DataFrame({
+#     'video_path': jesterVideo_val_paths,
+#     'label': jester_val_video_labels
+# })
+# jester_test_df = jester_test_df[
+#     ~jester_test_df['label'].isin(unwanted_labels)
+# ]
    
+
 kinetics_train_df = pd.DataFrame({
     'video_path': train_video_paths,
     'label': train_video_labels
 })
- 
+
+
 kinetics_400_labels = set(index_to_label_k400.values())
  
 kinetics_train_filtered_df = kinetics_train_df[
     ~kinetics_train_df['label'].isin(kinetics_400_labels)
 ]
- 
+
+
 kinetics_test_df = pd.DataFrame({
     'video_path': val_video_paths,
     'label': val_video_labels
@@ -92,31 +98,12 @@ kinetics_test_df = pd.DataFrame({
 kinetics_test_filtered_df = kinetics_test_df[
     ~kinetics_test_df['label'].isin(kinetics_400_labels)
 ]
-kinetics_test_base_df = kinetics_test_df[
-    kinetics_test_df['label'].isin(kinetics_400_labels)
-]
-
-
-mock_test_data = kinetics_test_base_df.iloc[50:60].reset_index(drop=True)
-mock_test_data['label_index'] = mock_test_data['label'].map(label_to_index_k400)
-print('mock test data', mock_test_data['label_index'])
-print('\n')
 
 # Display the shapes to confirm the filtering
 print("Filtered Kinetics Train DataFrame Shape:", kinetics_train_filtered_df.shape, "vs Original:", kinetics_train_df.shape)
 print("Filtered Kinetics Test DataFrame Shape:", kinetics_test_filtered_df.shape, "vs Original:", kinetics_test_df.shape)
+print('\n')
  
- 
-# kinetics_top2_labels = kinetics_train_df['label'].value_counts().nlargest(2).index
-# kinetics_top2_df = kinetics_train_df[kinetics_train_df['label'].isin(kinetics_top2_labels)]
-kinetics_strings_df = kinetics_train_df[kinetics_train_df['label'].isin(new_classes)]
-mock_train_data = kinetics_strings_df.reset_index(drop=True)
-#mock_train_data = pd.concat([kinetics_top2_df, kinetics_gangman_df], ignore_index=True)
-# mock_train_data = pd.concat([jester_top2_df, kinetics_top2_df, kinetics_hangman_df], ignore_index=True)
- 
-print('mock labels being used ', mock_train_data['label'].value_counts())
-# print('mock data', mock_train_data.head())
-# print('test data' ,mock_test_data)
  
 # Load the model with the KINETICS400_IMAGENET22K_V1 pre-trained weights
 weights = Swin3D_B_Weights.KINETICS400_IMAGENET22K_V1
@@ -126,70 +113,112 @@ preprocess = weights.transforms()
 """
 MOCKING TRAIN DATA
 """
-# Create a dataloader for the mock training data
-# dataloader = create_dataloader(mock_train_data['video_path'], mock_train_data['label'].index, num_frames=16, batch_size=50, preprocess=preprocess)
+
+num_features = model.head.in_features
  
+# Modify the final layer to output 401 classes
+model.head = torch.nn.Linear(num_features, 401)
+
+# Freeze all layers except the final layer
+for param in model.parameters():
+    param.requires_grad = False
+
+# Only allow gradients on the final layer
+for param in model.head.parameters():
+    param.requires_grad = True
+
+kinetics_train_base_df = kinetics_train_df[
+    kinetics_train_df['label'].isin(kinetics_400_labels)
+]
  
-# number_features = model.head.in_features
-# model.head = torch.nn.Linear(number_features, number_features + len(strings))
-# # Freeze the model parameters
-# for param in model.parameters():
-#     param.requires_grad = False
-# # Train final layer
-# for param in model.head.parameters():
-#     param.requires_grad = True
+# Move model to device
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(device)
+# Wrap the model with DataParallel to use multiple GPUs
+if torch.cuda.device_count() > 1:
+    print(f"Using {torch.cuda.device_count()} GPUs for training")
+    model = torch.nn.DataParallel(model)  # Use all available GPUs
+    # model = torch.nn.DataParallel(model, device_ids=[0, 1, 2, 3])  # Use the first 4 GPUs
+else:
+    print("Using a single GPU or CPU for training")
+
+model.to(device)
+model_path = os.path.join(current_dir, '../models/trained_swin_model.pth')
+
+
+# mock_train_data =  kinetics_train_base_df.reset_index(drop=True)
+# # mock_train_data =  kinetics_strings_df.head(200).reset_index(drop=True)
+# mock_train_data['label_index'] = mock_train_data['label'].map(label_to_index_k400)
+# print('mock train labels being used \n', mock_train_data['label'].value_counts())
+# print('train label size is: ', mock_train_data.shape)
+
+
+# dataloader = create_dataloader(
+#     video_paths=mock_train_data['video_path'], 
+#     video_labels=mock_train_data['label_index'],  
+#     num_frames=16,
+#     batch_size=64,
+#     preprocess=preprocess
+# )
+
  
- 
-# # Train the model and optimizer
-# optimizer = optim.SGD(model.parameters(), lr=0.01)
+# # Define loss function and optimizer
 # criterion = torch.nn.CrossEntropyLoss()
- 
- 
-# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-# num_epochs = 1
-# running_loss = 0.0
+# optimizer = optim.SGD(model.head.parameters(), lr=0.001, momentum=0.9)
+# print("starting training")
+# # Fine-tune the model
+# num_epochs = 1  
 # for epoch in range(num_epochs):
 #     model.train()
-#     for i, batch in enumerate(dataloader):
-#         inputs, labels = batch
-#         inputs = inputs.to(device)
-#         labels = labels.to(device)
-        
+#     running_loss = 0.0
+#     start_time = time.time()
+#     for i, (inputs, labels) in enumerate(dataloader):
+#         if inputs is None or labels is None:
+#             continue
+
+#         inputs, labels = inputs.to(device), labels.to(device)
 #         optimizer.zero_grad()
-#         outputs = model(batch)
+#         outputs = model(inputs)
 #         loss = criterion(outputs, labels)
 #         loss.backward()
 #         optimizer.step()
 #         running_loss += loss.item() * inputs.size(0)
- 
-#     epoch_loss = running_loss / len(dataloader.dataset)
-#     print(f'Epoch {epoch+1}/{num_epochs}, Loss: {epoch_loss:.4f}')
- 
-# Save the model
-model_path = os.path.join(current_dir, '../models/trained_swin_model.pth')
-torch.save(model.state_dict(), model_path)
- 
-# for i, batch in enumerate(dataloader):
-#     print(f"Batch {i+1} shape: {batch.shape}")
- 
+#         if i % 10 == 0:
+#             print(f'Batch {i} Loss: {loss.item():.4f}')
+#             print(f'Time: {time.time() - start_time:.4f} seconds')
 
- 
- 
+
+#     end_time = time.time()
+#     epoch_loss = running_loss / len(dataloader.dataset)
+#     print(f'Epoch {epoch + 1} Time: {end_time - start_time:.4f} seconds')
+#     print(f'Epoch {epoch+1}/{num_epochs}, Loss: {epoch_loss:.4f}')
+    
+#     # Save the model after each epoch
+#     torch.save(model.state_dict(), model_path)
+
 """
 MOCKING MODEL ON TEST DATA
 """
+
+kinetics_test_base_df = kinetics_test_df[
+    kinetics_test_df['label'].isin(kinetics_400_labels)
+]
+
+mock_test_data = kinetics_test_base_df.reset_index(drop=True)
+mock_test_data['label_index'] = mock_test_data['label'].map(label_to_index_k400)
+model.load_state_dict(torch.load(model_path, map_location=device))
 model.eval()
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print("device: ", device)  
-model.to(device)
+
 dataloader = create_dataloader(
-    video_paths=mock_test_data['video_path'],
-    video_labels=mock_test_data['label_index'], 
+    video_paths=mock_test_data['video_path'].head(5),
+    video_labels=mock_test_data['label_index'].head(5), 
     num_frames=16,
-    batch_size=5,
+    batch_size=64,
     preprocess=preprocess
 ) 
  
+print(mock_test_data.head(5))
+
 correct_predictions = 0
 top5_correct_predictions = 0
 total_predictions = 0
@@ -226,7 +255,6 @@ with open("results.txt", "w") as f:
             print(top_5)
 
 
-            # Track the paths of videos with incorrect top-5 predictions
             # Track the paths of videos with incorrect top-5 predictions
             batch_start = i * dataloader.batch_size
             batch_video_paths = list(dataloader.dataset.video_paths[batch_start : batch_start + len(labels)])

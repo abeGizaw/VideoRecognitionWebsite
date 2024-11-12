@@ -4,10 +4,12 @@ import torchvision.transforms as transforms
 from torchvision.io import read_video
 from torch.utils.data import DataLoader, Dataset
 
+
+
 class VideoDataset(Dataset):
     def __init__(self, video_paths, video_labels=None, num_frames=32, transform=None):
         self.video_paths = video_paths
-        self.video_labels = torch.tensor(video_labels.tolist(), dtype=torch.long) if video_labels is not None else None
+        self.video_labels = torch.tensor(video_labels, dtype=torch.long) if video_labels is not None else None
         self.num_frames = num_frames
         self.transform = transform
 
@@ -20,7 +22,6 @@ class VideoDataset(Dataset):
     def __getitem__(self, idx):
         video_path = self.video_paths[idx]
         video_label = self.video_labels[idx] if self.video_labels is not None else None
-
         if os.path.isdir(video_path):
             self._load_images_from_dir(video_path); # Skip directories for now (Jester)
             return
@@ -28,6 +29,9 @@ class VideoDataset(Dataset):
         # Read video frames using torchvision's read_video (ignoring the audio and info metadata)
         # video = a torch.Tensor containing the video frames in the format (T, H, W, C)
         video, _, _ = read_video(video_path, pts_unit='sec')
+        if video.shape[0] == 0:  # Check if the video has no frames
+            print(f"Warning: Video at {video_path} has no frames.")
+            return self.__getitem__((idx + 1) % len(self)) # Skip empty videos
         
         # Sample a fixed number of frames evenly from the video
         total_frames = video.shape[0]
@@ -53,5 +57,5 @@ class VideoDataset(Dataset):
 # Function to create a DataLoader for the videos
 def create_dataloader(video_paths,video_labels,  num_frames=32, batch_size=5, preprocess=None):
     dataset = VideoDataset(video_paths, video_labels, num_frames=num_frames, transform=preprocess)
-    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=4)
     return dataloader
