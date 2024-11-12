@@ -13,27 +13,42 @@ def process_video(file_path):
     print(f"Processing video at {file_path}")
     result = ""
 
+    # Load the pre-trained weights
     weights = Swin3D_B_Weights.KINETICS400_IMAGENET22K_V1
-    model = swin3d_b(weights=weights)
+    model = swin3d_b(weights=weights)  # Use pre-trained weights
+
+
+    # Modify the final layer to output 401 classes
+    num_features = model.head.in_features
+    model.head = torch.nn.Linear(num_features, 401)
+
     # Construct the absolute path to the model weights file
     current_dir = os.path.dirname(os.path.abspath(__file__))
     model_path = os.path.join(current_dir, 'trained_swin_model.pth')
-    model.load_state_dict(torch.load(model_path))
+
+    # Load the state dictionary with weights_only=True
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
+    state_dict = torch.load(model_path, map_location=device)
+    model.load_state_dict(state_dict, strict=False)
+   
+
+
     model.eval()
+
     # Preprocessing transforms from the model's weights
     preprocess = weights.transforms()
-
+    
     # Create a DataLoader for the single video
     dataloader = create_dataloader(
         video_paths=[file_path],     
         video_labels=None,           
-        num_frames=32,
+        num_frames=16,
         batch_size=1,
         preprocess=preprocess
     )
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model.to(device)
+   
     with torch.no_grad():
         for batch in dataloader:
             input_video = batch.to(device)
