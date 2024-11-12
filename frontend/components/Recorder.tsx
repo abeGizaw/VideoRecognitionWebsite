@@ -37,6 +37,9 @@ export const Recorder = ({ setMessage }: RecorderProps) => {
           { text: 'Let me process that...', isUser: false },
         ]);
 
+
+        //`${'https://my-backend-app-1001376648512.us-central1.run.app'}/upload?source=chatBot`,
+     
         // const uploadResponse = await fetch(
         //   `${import.meta.env.VITE_BACKEND_URL}/upload?source=chatBot`,
         //   {

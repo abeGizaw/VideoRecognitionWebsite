@@ -1,6 +1,0 @@
-
- /work/cssema416/202510/05/05/VideoRecognitionWebsite/backend/train/../../../data/kinetics-dataset/k700-2020/val/air drumming/w-KypbhLWI4_000221_000231.mp4 
- ['pumping fist', 'headbanging', 'swing dancing', 'dancing macarena', 'dancing charleston']
-
- /work/cssema416/202510/05/05/VideoRecognitionWebsite/backend/train/../../../data/kinetics-dataset/k700-2020/val/air drumming/vrr9XZxdQQ8_000004_000014.mp4 
- ['slapping', 'rock scissors paper', 'shaking hands', 'punching bag', 'pumping fist']

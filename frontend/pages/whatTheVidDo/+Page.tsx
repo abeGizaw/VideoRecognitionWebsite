@@ -45,6 +45,7 @@ export const Page = () => {
         formData.append('file', videoFile);
         setMessage('Uploading file...');
 
+
         // const uploadResponse = await fetch(
         //   `${import.meta.env.VITE_BACKEND_URL}/upload`,
         //   {

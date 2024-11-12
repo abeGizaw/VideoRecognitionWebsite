@@ -1,5 +1,7 @@
 *.pkl
 *.pth
+results.txt
+wrong_paths.txt
 #node_modules
 node_modules
 
