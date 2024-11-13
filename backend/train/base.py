@@ -12,7 +12,7 @@ import torch
 import torch.nn.functional as F
  
 
-kinetics_train_df, kinetics_test_df = get_kinetics_dataFrames(True)
+kinetics_train_df, kinetics_test_df = get_kinetics_dataFrames()
 
 
 kinetics_400_labels = set(index_to_label_k400.values())
@@ -71,7 +71,7 @@ else:
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 model.to(device)
-model_path = os.path.join(current_dir, '../models/trained_swin_model.pth')
+model_path = os.path.join(current_dir, '../models/trained_swin_model_base.pth')
 
 
 # mock_train_data =  kinetics_train_base_df.reset_index(drop=True)
