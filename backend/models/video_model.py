@@ -15,30 +15,36 @@ def process_video(file_path):
 
     # Load the pre-trained weights
     weights = Swin3D_B_Weights.KINETICS400_IMAGENET22K_V1
-    model = swin3d_b(weights=weights)  # Use pre-trained weights
+    model = swin3d_b(weights=weights)
+    preprocess = weights.transforms()
 
 
     # Modify the final layer to output 401 classes
     num_features = model.head.in_features
     model.head = torch.nn.Linear(num_features, 401)
+    # Freeze all layers except the final layer
+    for param in model.parameters():
+        param.requires_grad = False
+
+    # Only allow gradients on the final layer
+    for param in model.head.parameters():
+        param.requires_grad = True
+
+    # Move model to device
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    if torch.cuda.device_count() > 1:
+        model = torch.nn.DataParallel(model)  # Use all available GPUs
+    model.to(device)
 
     # Construct the absolute path to the model weights file
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    model_path = os.path.join(current_dir, 'trained_swin_model.pth')
+    model_path = os.path.join(current_dir, 'trained_swin_model_base.pth')
 
-    # Load the state dictionary with weights_only=True
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model.to(device)
-    state_dict = torch.load(model_path, map_location=device)
-    model.load_state_dict(state_dict, strict=False)
    
-
-
+    state_dict = torch.load(model_path, map_location=device)
+    model.load_state_dict(state_dict, strict=True)
     model.eval()
 
-    # Preprocessing transforms from the model's weights
-    preprocess = weights.transforms()
-    
     # Create a DataLoader for the single video
     dataloader = create_dataloader(
         video_paths=[file_path],     
@@ -72,3 +78,4 @@ def process_video(file_path):
                 result += f"{lbl}: {confidence.item() * 100:.2f}%\n"
                 
         return result
+    

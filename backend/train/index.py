@@ -9,9 +9,7 @@ from torchvision.models.video import swin3d_b, Swin3D_B_Weights
 from videoCreator import create_dataloader
 from trainingMappings import index_to_label_k400, unwanted_labels, new_classes, label_to_index_k400,combineLabels,generalized
 import torch
-import torch.optim as optim
-
- 
+import torch.nn.functional as F
  
 print('Loading Kinetics-700 dataset...')
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -21,7 +19,7 @@ val_csv = os.path.join(annotations_path, 'val.csv')
 train_videos_dir = os.path.join(current_dir, '../../../data/kinetics-dataset/k700-2020/train')
 val_videos_dir = os.path.join(current_dir, '../../../data/kinetics-dataset/k700-2020/val')
  
-combineLabels(train_videos_dir)
+# combineLabels(train_videos_dir)
 
 # Load CSV files
 train_df = pd.read_csv(train_csv)
@@ -143,7 +141,7 @@ else:
     print("Using a single GPU or CPU for training")
 
 model.to(device)
-model_path = os.path.join(current_dir, '../models/trained_swin_model.pth')
+model_path = os.path.join(current_dir, '../models/trained_swin_model_base.pth')
 
 
 # mock_train_data =  kinetics_train_base_df.reset_index(drop=True)
@@ -200,9 +198,17 @@ model_path = os.path.join(current_dir, '../models/trained_swin_model.pth')
 MOCKING MODEL ON TEST DATA
 """
 
+target_labels = ["adjusting glasses"] 
+
 kinetics_test_base_df = kinetics_test_df[
     kinetics_test_df['label'].isin(kinetics_400_labels)
 ]
+filtered_test_df = kinetics_test_df[
+    kinetics_test_df['label'].isin(target_labels)
+]
+
+limited_test_df = filtered_test_df.groupby('label').head(100).reset_index(drop=True)
+limited_test_df['label_index'] = limited_test_df['label'].map(label_to_index_k400)
 
 mock_test_data = kinetics_test_base_df.reset_index(drop=True)
 mock_test_data['label_index'] = mock_test_data['label'].map(label_to_index_k400)
@@ -210,20 +216,21 @@ model.load_state_dict(torch.load(model_path, map_location=device))
 model.eval()
 
 dataloader = create_dataloader(
-    video_paths=mock_test_data['video_path'].head(5),
-    video_labels=mock_test_data['label_index'].head(5), 
+    video_paths=limited_test_df['video_path'].head(15),
+    video_labels=limited_test_df['label_index'].head(15), 
     num_frames=16,
     batch_size=64,
     preprocess=preprocess
 ) 
  
-print(mock_test_data.head(5))
+print(limited_test_df.head(5))
 
 correct_predictions = 0
 top5_correct_predictions = 0
 total_predictions = 0
 wrong_paths = []
 
+results = []    
 with open("results.txt", "w") as f:
     with torch.no_grad():
         for i, (batch, label) in enumerate(dataloader):
@@ -232,18 +239,25 @@ with open("results.txt", "w") as f:
 
             # Get model predictions
             outputs = model(batch)
+            probabilities = F.softmax(outputs, dim=1)  # Apply softmax to get probabilities
+            predicted_label_prob = torch.argmax(probabilities, dim=1)
             predicted_labels = torch.argmax(outputs, dim=1)
+
             top_5 = torch.topk(outputs, 5).indices
+            top_5_confidences = torch.topk(probabilities, 5).values
         
             # Convert predictions and labels to lists of indices for comparison
             predicted_labels = predicted_labels.cpu().tolist()
+            predicted_label_prob = predicted_label_prob.cpu().tolist()
             labels = label.cpu().tolist()
-            top_5 = top_5.cpu().tolist()          
+            top_5 = top_5.cpu().tolist()   
+            top_5_confidences = top_5_confidences.cpu().tolist()       
 
-            # Convert indices to labels
+            # Convert indices to labelsconad
             predicted_labels_mapped = [index_to_label_k400.get(idx, f"unknown_{idx}") for idx in predicted_labels]
             top_5_mapped = [[index_to_label_k400.get(idx, f"unknown_{idx}") for idx in indices] for indices in top_5]           
             true_labels_mapped = [index_to_label_k400.get(label, label) for label in labels]
+            label_soft = [index_to_label_k400.get(idx, "Unknown") for idx in predicted_label_prob]
 
             # Calculate accuracy
             correct_predictions += sum(pred == true for pred, true in zip(predicted_labels, labels))
@@ -266,14 +280,27 @@ with open("results.txt", "w") as f:
 
 
             f.write(f"Batch {i+1} predictions: {predicted_labels_mapped}\n")
+            f.write(f"Batch {i+1} soft predictions: {label_soft}\n")
             f.write(f"Batch {i+1} true labels: {true_labels_mapped}\n")
             f.write(f"Batch {i+1} top 5 predictions:\n")
             for entry in top_5_mapped:
                 f.write(f"{entry}\n")
             f.write("\n")
+
+            for i, (pred_label, top5_labels, top5_conf) in enumerate(zip(predicted_labels, top_5_mapped, top_5_confidences)):
+                result = f"Prediction {i + 1}:\n"
+                result += f"Most confident: {pred_label}\n"
+                result += "I think it is at least one of these 5:\n"
+                
+                # Format each label and its confidence as a percentage
+                for lbl, confidence in zip(top5_labels, top5_conf):
+                    result += f"{lbl}: {confidence * 100:.2f}%\n"
+                
+                results.append(result)
            
             
-
+final_output = "\n".join(results)
+print(final_output)
 accuracy = correct_predictions / total_predictions
 top5_accuracy = top5_correct_predictions / total_predictions
 print(f"Accuracy: {accuracy:.4f}")
