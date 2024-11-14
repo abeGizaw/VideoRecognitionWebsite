@@ -4,6 +4,32 @@
 Currently, there is no working deployed version of this website due to the large storage requirements, which are challenging to manage on Google Cloud. To use the website, you will need to run it locally.  
 This project allows users to upload or record videos for action classification using a Swin3db model. To run this website locally, follow the steps below.
 
+## Setup Instructions
+
+To set up the environment for this project, follow these steps:
+
+1. **Create and activate a new Conda environment:**
+
+    ```bash
+    conda create -n video_env python=3.12 -y
+    conda activate video_env
+    ```
+
+2. **Install PyTorch with CUDA, torchvision, and torchaudio. This assumes you are using linux:**
+
+    ```bash
+    conda install pytorch torchvision torchaudio pytorch-cuda=12.4 -c pytorch -c nvidia -y
+    ```
+
+3. **Install additional libraries:**
+
+    ```bash
+    conda install pandas flask flask-cors joblib av matplotlib -c conda-forge -y
+    ```
+
+This setup will install all the necessary dependencies for running the program, including PyTorch, CUDA support, and essential libraries for data processing and visualization.
+
+
 ## Getting Started
 
 ### 1. Clone the Repository
