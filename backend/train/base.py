@@ -10,7 +10,7 @@ from videoCreator import create_dataloader
 from trainingMappings import index_to_label_k400, unwanted_labels, new_classes, label_to_index_k400,combineLabels,generalized
 import torch
 import torch.nn.functional as F
- 
+from torch import optim 
 
 kinetics_train_df, kinetics_test_df = get_kinetics_dataFrames()
 
@@ -74,55 +74,59 @@ model.to(device)
 model_path = os.path.join(current_dir, '../models/trained_swin_model_base.pth')
 
 
-# mock_train_data =  kinetics_train_base_df.reset_index(drop=True)
-# # mock_train_data =  kinetics_strings_df.head(200).reset_index(drop=True)
-# mock_train_data['label_index'] = mock_train_data['label'].map(label_to_index_k400)
-# print('mock train labels being used \n', mock_train_data['label'].value_counts())
-# print('train label size is: ', mock_train_data.shape)
+mock_train_data =  kinetics_train_base_df.reset_index(drop=True)
+# mock_train_data =  kinetics_strings_df.head(200).reset_index(drop=True)
+mock_train_data['label_index'] = mock_train_data['label'].map(label_to_index_k400)
+print('mock train labels being used \n', mock_train_data['label'].value_counts())
+print('train label size is: ', mock_train_data.shape)
 
 
-# dataloader = create_dataloader(
-#     video_paths=mock_train_data['video_path'], 
-#     video_labels=mock_train_data['label_index'],  
-#     num_frames=16,
-#     batch_size=64,
-#     preprocess=preprocess
-# )
+dataloader = create_dataloader(
+    video_paths=mock_train_data['video_path'], 
+    video_labels=mock_train_data['label_index'],  
+    num_frames=16,
+    batch_size=64,
+    preprocess=preprocess
+)
 
  
-# # Define loss function and optimizer
-# criterion = torch.nn.CrossEntropyLoss()
-# optimizer = optim.SGD(model.head.parameters(), lr=0.001, momentum=0.9)
-# print("starting training")
-# # Fine-tune the model
-# num_epochs = 1  
-# for epoch in range(num_epochs):
-#     model.train()
-#     running_loss = 0.0
-#     start_time = time.time()
-#     for i, (inputs, labels) in enumerate(dataloader):
-#         if inputs is None or labels is None:
-#             continue
+# Define loss function and optimizer
+criterion = torch.nn.CrossEntropyLoss()
+optimizer = optim.SGD(
+    model.module.head.parameters() if isinstance(model, torch.nn.DataParallel) else model.head.parameters(), 
+    lr=0.001, 
+    momentum=0.9
+)
+print("starting training")
+# Fine-tune the model
+num_epochs = 1  
+for epoch in range(num_epochs):
+    model.train()
+    running_loss = 0.0
+    start_time = time.time()
+    for i, (inputs, labels) in enumerate(dataloader):
+        if inputs is None or labels is None:
+            continue
 
-#         inputs, labels = inputs.to(device), labels.to(device)
-#         optimizer.zero_grad()
-#         outputs = model(inputs)
-#         loss = criterion(outputs, labels)
-#         loss.backward()
-#         optimizer.step()
-#         running_loss += loss.item() * inputs.size(0)
-#         if i % 10 == 0:
-#             print(f'Batch {i} Loss: {loss.item():.4f}')
-#             print(f'Time: {time.time() - start_time:.4f} seconds')
+        inputs, labels = inputs.to(device), labels.to(device)
+        optimizer.zero_grad()
+        outputs = model(inputs)
+        loss = criterion(outputs, labels)
+        loss.backward()
+        optimizer.step()
+        running_loss += loss.item() * inputs.size(0)
+        if i % 10 == 0:
+            print(f'Batch {i} Loss: {loss.item():.4f}')
+            print(f'Time: {time.time() - start_time:.4f} seconds')
 
 
-#     end_time = time.time()
-#     epoch_loss = running_loss / len(dataloader.dataset)
-#     print(f'Epoch {epoch + 1} Time: {end_time - start_time:.4f} seconds')
-#     print(f'Epoch {epoch+1}/{num_epochs}, Loss: {epoch_loss:.4f}')
+    end_time = time.time()
+    epoch_loss = running_loss / len(dataloader.dataset)
+    print(f'Epoch {epoch + 1} Time: {end_time - start_time:.4f} seconds')
+    print(f'Epoch {epoch+1}/{num_epochs}, Loss: {epoch_loss:.4f}')
     
-#     # Save the model after each epoch
-#     torch.save(model.state_dict(), model_path)
+    # Save the model after each epoch
+    # torch.save(model.state_dict(), model_path)
 
 """
 MOCKING MODEL ON TEST DATA

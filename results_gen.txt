@@ -1,0 +1,10 @@
+Batch 1 predictions: ['abseiling', 'abseiling', 'abseiling', 'abseiling', 'abseiling']
+Batch 1 soft predictions: ['abseiling', 'abseiling', 'abseiling', 'abseiling', 'abseiling']
+Batch 1 true labels: ['abseiling', 'abseiling', 'abseiling', 'abseiling', 'abseiling']
+Batch 1 top 5 predictions:
+['abseiling', 'barbequing', 'playing cricket', 'rock scissors paper', 'blasting sand']
+['abseiling', 'bandaging', 'alligator wrestling', 'fixing hair', 'cracking neck']
+['abseiling', 'cracking neck', 'driving car', 'playing chess', 'robot dancing']
+['abseiling', 'barbequing', 'hurling (sport)', 'playing cymbals', 'dunking basketball']
+['abseiling', 'alligator wrestling', 'chopping wood', 'riding elephant', 'playing chess']
+

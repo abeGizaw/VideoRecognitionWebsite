@@ -3,8 +3,9 @@ import pandas as pd
 from joblib import Parallel, delayed
 import pickle
 import torch
+from trainingMappings import combineLabels, generalized
  
-def get_kinetics_dataFrames(combine_labels = false):
+def get_kinetics_dataFrames(*, combine_labels = False, generalized_data = False):
     print('Loading Kinetics-700 dataset...')
     current_dir = os.path.dirname(os.path.abspath(__file__))
     annotations_path = os.path.join(current_dir, '../../../data/kinetics-dataset/k700-2020/annotations')
@@ -14,10 +15,13 @@ def get_kinetics_dataFrames(combine_labels = false):
     val_videos_dir = os.path.join(current_dir, '../../../data/kinetics-dataset/k700-2020/val')
     
     if combine_labels:
-        combineLabels(train_videos_dir)
+        combineLabels(train_videos_dir, 500, 'train')
+        combineLabels(val_videos_dir, 50, 'val')
 
     # Load CSV files
     train_df = pd.read_csv(train_csv)
+
+ 
     val_df = pd.read_csv(val_csv)
     train_video_paths, train_video_labels = load_training_data(train_df, train_videos_dir, "kinetics")
     val_video_paths, val_video_labels = load_validation_data(val_df, val_videos_dir, "kinetics")
@@ -45,9 +49,36 @@ def get_kinetics_dataFrames(combine_labels = false):
         'label': train_video_labels
     })
 
+
+    if generalized_data:
+        kinetics_test_df = pd.concat([kinetics_test_df, addGeneralized(val_videos_dir)], ignore_index=True)
+        kinetics_train_df = pd.concat([kinetics_train_df, addGeneralized(train_videos_dir)], ignore_index=True)
+
+
     return kinetics_train_df, kinetics_test_df
 
+
+
+def addGeneralized(dir_path):
+    video_paths = []
+    labels = []
+
+    # Iterate over each label in the generalized list
+    for label in generalized:
+        label_dir = os.path.join(dir_path, label)        
+        if os.path.isdir(label_dir):
+            for file_name in os.listdir(label_dir):
+                file_path = os.path.join(label_dir, file_name)
+                if os.path.isfile(file_path):
+                    video_paths.append(file_path)
+                    labels.append(label)
     
+    generalized_df = pd.DataFrame({
+        'video_path': video_paths,
+        'label': labels
+    })
+    
+    return generalized_df
 
 
 def load_training_data(train_df, train_videos_dir, cache_name):

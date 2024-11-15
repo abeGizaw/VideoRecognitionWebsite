@@ -22,7 +22,9 @@ export const Chatbot = ({ messages }: ChatbotProps) => {
               maxWidth: '70%',
             }}
           >
-            {message.text}
+            {message.text.split('\n').map((line, i) => (
+              <div key={i}>{line}</div>
+            ))}
           </Card>
         ))}
       </Card>

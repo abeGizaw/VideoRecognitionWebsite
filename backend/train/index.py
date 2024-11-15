@@ -7,22 +7,23 @@ import pandas as pd
 from trainHelper import get_kinetics_dataFrames
 from torchvision.models.video import swin3d_b, Swin3D_B_Weights
 from videoCreator import create_dataloader
-from trainingMappings import index_to_label_k400, unwanted_labels, new_classes, label_to_index_k400,combineLabels,generalized
+from trainingMappings import unwanted_labels, new_classes, label_to_index_k400_generalized,generalized, index_to_label_k400_generalized
 import torch
 import torch.nn.functional as F
+from torch import optim
+import matplotlib.pyplot as plt
  
 
-kinetics_train_df, kinetics_test_df = get_kinetics_dataFrames(True)
+kinetics_train_df, kinetics_test_df = get_kinetics_dataFrames(generalized_data=True)
 
-
-kinetics_400_labels = set(index_to_label_k400.values())
+generalized_kinetics_400_labels = set(index_to_label_k400_generalized.values())
  
 kinetics_train_filtered_df = kinetics_train_df[
-    ~kinetics_train_df['label'].isin(kinetics_400_labels)
+    ~kinetics_train_df['label'].isin(generalized_kinetics_400_labels)
 ]
  
 kinetics_test_filtered_df = kinetics_test_df[
-    ~kinetics_test_df['label'].isin(kinetics_400_labels)
+    ~kinetics_test_df['label'].isin(generalized_kinetics_400_labels)
 ]
 
 # Display the shapes to confirm the filtering
@@ -41,9 +42,12 @@ MOCKING TRAIN DATA
 """
 
 num_features = model.head.in_features
- 
-# Modify the final layer to output 401 classes
-model.head = torch.nn.Linear(num_features, 401)
+kinetics_train_base_df = kinetics_train_df[
+    kinetics_train_df['label'].isin(generalized_kinetics_400_labels)
+]
+
+# Modify the final layer to output the proper amount of classes
+model.head = torch.nn.Linear(num_features, kinetics_train_base_df['label'].nunique())
 
 # Freeze all layers except the final layer
 for param in model.parameters():
@@ -53,13 +57,19 @@ for param in model.parameters():
 for param in model.head.parameters():
     param.requires_grad = True
 
-kinetics_train_base_df = kinetics_train_df[
-    kinetics_train_df['label'].isin(kinetics_400_labels)
-]
- 
+
+
+mock_train_data =  kinetics_train_base_df.reset_index(drop=True)
+# mock_train_data =  kinetics_strings_df.head(200).reset_index(drop=True)
+mock_train_data['label_index'] = mock_train_data['label'].map(label_to_index_k400_generalized)
+
+print('train label size is: ', mock_train_data.shape)
+print('Number of Unique Labels: ', mock_train_data['label_index'].nunique())
+
+
+
 # Move model to device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(device)
 # Wrap the model with DataParallel to use multiple GPUs
 if torch.cuda.device_count() > 1:
     print(f"Using {torch.cuda.device_count()} GPUs for training")
@@ -68,61 +78,77 @@ if torch.cuda.device_count() > 1:
 else:
     print("Using a single GPU or CPU for training")
 
-
 current_dir = os.path.dirname(os.path.abspath(__file__))
 model.to(device)
-model_path = os.path.join(current_dir, '../models/trained_swin_model.pth')
+model_path = os.path.join(current_dir, '../models/trained_swin_model_generalized.pth')
+state_dict = torch.load(model_path, map_location=device,weights_only=True)
+model.load_state_dict(state_dict, strict=True)
+
+print(len(mock_train_data['video_path']))
+print(len(mock_train_data['label_index']))
+dataloader = create_dataloader(
+    video_paths=mock_train_data['video_path'], 
+    video_labels=mock_train_data['label_index'],  
+    num_frames=16,
+    batch_size=64,
+    preprocess=preprocess
+)
 
 
-# mock_train_data =  kinetics_train_base_df.reset_index(drop=True)
-# # mock_train_data =  kinetics_strings_df.head(200).reset_index(drop=True)
-# mock_train_data['label_index'] = mock_train_data['label'].map(label_to_index_k400)
-# print('mock train labels being used \n', mock_train_data['label'].value_counts())
-# print('train label size is: ', mock_train_data.shape)
+# Define loss function and optimizer
+criterion = torch.nn.CrossEntropyLoss()
+optimizer = optim.SGD(
+    model.module.head.parameters() if isinstance(model, torch.nn.DataParallel) else model.head.parameters(), 
+    lr=0.001, 
+    momentum=0.9
+)
+print("starting training \n")
+
+# Fine-tune the model
+training_losses = []
+num_epochs = 1  
+for epoch in range(num_epochs):
+    model.train()
+    running_loss = 0.0
+    start_time = time.time()
+    for i, (inputs, labels) in enumerate(dataloader):
+        if inputs is None or labels is None:
+            continue
+
+        inputs, labels = inputs.to(device), labels.to(device)
+        optimizer.zero_grad()
+        outputs = model(inputs)
+        loss = criterion(outputs, labels)
+        training_losses.append(loss.item())
+        loss.backward()
+        optimizer.step()
+        running_loss += loss.item() * inputs.size(0)
+        if i % 10 == 0:
+            print(f'Batch {i} Loss: {loss.item():.4f}')
+            print(f'Time: {time.time() - start_time:.4f} seconds')
+        # Save the model every 100 batches
+        if i % 100 == 0:
+            print("saving model with loss: ", loss.item())
+            torch.save(model.state_dict(), model_path)
 
 
-# dataloader = create_dataloader(
-#     video_paths=mock_train_data['video_path'], 
-#     video_labels=mock_train_data['label_index'],  
-#     num_frames=16,
-#     batch_size=64,
-#     preprocess=preprocess
-# )
-
- 
-# # Define loss function and optimizer
-# criterion = torch.nn.CrossEntropyLoss()
-# optimizer = optim.SGD(model.head.parameters(), lr=0.001, momentum=0.9)
-# print("starting training")
-# # Fine-tune the model
-# num_epochs = 1  
-# for epoch in range(num_epochs):
-#     model.train()
-#     running_loss = 0.0
-#     start_time = time.time()
-#     for i, (inputs, labels) in enumerate(dataloader):
-#         if inputs is None or labels is None:
-#             continue
-
-#         inputs, labels = inputs.to(device), labels.to(device)
-#         optimizer.zero_grad()
-#         outputs = model(inputs)
-#         loss = criterion(outputs, labels)
-#         loss.backward()
-#         optimizer.step()
-#         running_loss += loss.item() * inputs.size(0)
-#         if i % 10 == 0:
-#             print(f'Batch {i} Loss: {loss.item():.4f}')
-#             print(f'Time: {time.time() - start_time:.4f} seconds')
-
-
-#     end_time = time.time()
-#     epoch_loss = running_loss / len(dataloader.dataset)
-#     print(f'Epoch {epoch + 1} Time: {end_time - start_time:.4f} seconds')
-#     print(f'Epoch {epoch+1}/{num_epochs}, Loss: {epoch_loss:.4f}')
+    end_time = time.time()
+    epoch_loss = running_loss / len(dataloader.dataset)
+    print(f'Epoch {epoch + 1} Time: {end_time - start_time:.4f} seconds')
+    print(f'Epoch {epoch+1}/{num_epochs}, Loss: {epoch_loss:.4f}')
     
-#     # Save the model after each epoch
-#     torch.save(model.state_dict(), model_path)
+    # Save the model after each epoch
+    torch.save(model.state_dict(), model_path)
+
+with open("training_losses_gen.txt", "w") as f:
+    f.write(f"{training_losses}\n")
+
+plt.plot(training_losses)
+plt.xlabel('Batch')
+plt.ylabel('Loss')
+plt.title('Training Loss')
+plt.savefig('training_loss.png')
+plt.show()
 
 """
 MOCKING MODEL ON TEST DATA
@@ -131,29 +157,29 @@ MOCKING MODEL ON TEST DATA
 target_labels = ["adjusting glasses"] 
 
 kinetics_test_base_df = kinetics_test_df[
-    kinetics_test_df['label'].isin(kinetics_400_labels)
+    kinetics_test_df['label'].isin(generalized_kinetics_400_labels)
 ]
 filtered_test_df = kinetics_test_df[
     kinetics_test_df['label'].isin(target_labels)
 ]
 
 limited_test_df = filtered_test_df.groupby('label').head(100).reset_index(drop=True)
-limited_test_df['label_index'] = limited_test_df['label'].map(label_to_index_k400)
+limited_test_df['label_index'] = limited_test_df['label'].map(label_to_index_k400_generalized)
 
 mock_test_data = kinetics_test_base_df.reset_index(drop=True)
-mock_test_data['label_index'] = mock_test_data['label'].map(label_to_index_k400)
-model.load_state_dict(torch.load(model_path, map_location=device))
+mock_test_data['label_index'] = mock_test_data['label'].map(label_to_index_k400_generalized)
 model.eval()
+model.load_state_dict(torch.load(model_path, map_location=device, weights_only=True))
 
 dataloader = create_dataloader(
-    video_paths=limited_test_df['video_path'].head(15),
-    video_labels=limited_test_df['label_index'].head(15), 
+    video_paths=mock_test_data['video_path'],
+    video_labels=mock_test_data['label_index'], 
     num_frames=16,
     batch_size=64,
     preprocess=preprocess
 ) 
  
-print(limited_test_df.head(5))
+# print(limited_test_df.head(5))
 
 correct_predictions = 0
 top5_correct_predictions = 0
@@ -161,7 +187,7 @@ total_predictions = 0
 wrong_paths = []
 
 results = []    
-with open("results.txt", "w") as f:
+with open("results_gen.txt", "w") as f:
     with torch.no_grad():
         for i, (batch, label) in enumerate(dataloader):
             batch = batch.to(device)  
@@ -184,19 +210,19 @@ with open("results.txt", "w") as f:
             top_5_confidences = top_5_confidences.cpu().tolist()       
 
             # Convert indices to labelsconad
-            predicted_labels_mapped = [index_to_label_k400.get(idx, f"unknown_{idx}") for idx in predicted_labels]
-            top_5_mapped = [[index_to_label_k400.get(idx, f"unknown_{idx}") for idx in indices] for indices in top_5]           
-            true_labels_mapped = [index_to_label_k400.get(label, label) for label in labels]
-            label_soft = [index_to_label_k400.get(idx, "Unknown") for idx in predicted_label_prob]
+            predicted_labels_mapped = [index_to_label_k400_generalized.get(idx, f"unknown_{idx}") for idx in predicted_labels]
+            top_5_mapped = [[index_to_label_k400_generalized.get(idx, f"unknown_{idx}") for idx in indices] for indices in top_5]           
+            true_labels_mapped = [index_to_label_k400_generalized.get(label, label) for label in labels]
+            label_soft = [index_to_label_k400_generalized.get(idx, "Unknown") for idx in predicted_label_prob]
 
             # Calculate accuracy
             correct_predictions += sum(pred == true for pred, true in zip(predicted_labels, labels))
             top5_correct_predictions += sum(true in top_5[i] for i, true in enumerate(labels))
             total_predictions += len(labels)
 
-            print(predicted_labels)
-            print(labels)
-            print(top_5)
+            # print(predicted_labels)
+            # print(labels)
+            # print(top_5)
 
 
             # Track the paths of videos with incorrect top-5 predictions
@@ -217,25 +243,25 @@ with open("results.txt", "w") as f:
                 f.write(f"{entry}\n")
             f.write("\n")
 
-            for i, (pred_label, top5_labels, top5_conf) in enumerate(zip(predicted_labels, top_5_mapped, top_5_confidences)):
-                result = f"Prediction {i + 1}:\n"
-                result += f"Most confident: {pred_label}\n"
-                result += "I think it is at least one of these 5:\n"
+            # for i, (pred_label, top5_labels, top5_conf) in enumerate(zip(predicted_labels, top_5_mapped, top_5_confidences)):
+            #     result = f"Prediction {i + 1}:\n"
+            #     result += f"Most confident: {pred_label}\n"
+            #     result += "I think it is at least one of these 5:\n"
                 
-                # Format each label and its confidence as a percentage
-                for lbl, confidence in zip(top5_labels, top5_conf):
-                    result += f"{lbl}: {confidence * 100:.2f}%\n"
+            #     # Format each label and its confidence as a percentage
+            #     for lbl, confidence in zip(top5_labels, top5_conf):
+            #         result += f"{lbl}: {confidence * 100:.2f}%\n"
                 
-                results.append(result)
+            #     results.append(result)
            
             
 final_output = "\n".join(results)
-print(final_output)
+# print(final_output)
 accuracy = correct_predictions / total_predictions
 top5_accuracy = top5_correct_predictions / total_predictions
 print(f"Accuracy: {accuracy:.4f}")
 print(f"Top-5 Accuracy: {top5_accuracy:.4f}")
 
-with open("wrong_paths.txt", "w") as wrong_path:
+with open("wrong_paths_gen.txt", "w") as wrong_path:
     for (path, top_5) in wrong_paths:
         wrong_path.write(f"\n {path} \n {top_5}\n")
