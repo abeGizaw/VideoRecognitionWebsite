@@ -77,6 +77,44 @@ This should start the website on localhost:3000.
 ## Usage
 Now that both the backend and frontend are running, you can open your browser and go to http://localhost:3000 to use the website.
 
+# Project Structure and Key Files
+
+This section provides an overview of the key directories and files within the project, focusing on the main components that facilitate the functionality of this application.
+
+
+## Key Directories and Files
+
+### 1. `backend/`
+
+- **`app.py`**  
+  This file serves as the primary entry point for the backend of the application. It initializes the Flask application, sets up essential routes, and configures middleware, including CORS for handling cross-origin requests. The `app.py` file orchestrates the communication between the frontend and backend, managing HTTP requests and responses. It’s responsible for invoking appropriate backend functionality, including model processing and video handling.
+
+### 2. `backend/models/`
+
+- **`video_model.py`**  
+  This file loads the pre-trained video recognition model and handles video processing sent from the website. It utilizes the specified model architecture and pre-trained weights to analyze video inputs. The `video_model.py` file returns a JSON response with the top 5 predicted categories, offering confidence scores for each. It leverages PyTorch to perform inference and prepares the output for the frontend to display results.
+
+### 3. `backend/train/`
+
+- **`index.py`**  
+  This file is the main training script that drives the model training process. It loads the Kinetics dataset, modifies the Swin model to include new classes, and performs training and evaluation on the GPU. `index.py` uses helper functions from `trainHelper.py` and saves the trained model weights after each session. This file is designed for extensive model training workflows with multiple classes.
+
+- **`base.py`**  
+  This file is similar to `index.py` but with a key difference: it only adds a single new class to the original Swin model's classes, creating a base model to serve as a fallback. It also saves its own set of weights separately, ensuring that the model can revert to this configuration if needed.
+
+- **`trainMappings.py`**  
+  Contains mappings of class labels, including the label-to-index mappings for Kinetics-400 classes and any additional custom classes. This file also provides a function to generalize similar classes, which helps consolidate class groups when appropriate.
+
+- **`videoCreator.py`**  
+  This file is responsible for loading and preprocessing video data for model training. It includes the custom DataLoader code that prepares video data for the model, along with error-checking routines for handling corrupted videos or files with unexpected formats. 
+
+- **`trainHelper.py`**  
+  A utility file that provides helper functions supporting the training workflow. It includes functions for caching label mappings, generating dataframes for testing, and managing common tasks like logging and checkpoint creation. These utilities make the primary training scripts more modular and maintainable.
+
+---
+
+This structure provides an overview of the primary components within the project. Each section can be expanded upon to explain specific functions, classes, or processes as needed.
+
 ## Notes
 Ensure you have all necessary dependencies installed (pip for Python dependencies and npm for frontend dependencies).
 If you encounter any issues, make sure you are using compatible versions of Python and Node.js as specified in the repository requirements.
