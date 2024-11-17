@@ -75,7 +75,7 @@ def process_video(file_path):
             # Build the result string
             result = f"Most confident: {label}\nI think it is at least one of these 5:\n"
             for lbl, confidence in zip(top_5_labels, top_5_confidences):
-                result += f"{confidence.item() * 100:.2f}: {lbl}%\n"
+                result += f"{confidence.item() * 100:.2f}%: {lbl}\n"
                 
         return result
     
