@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { MessageTypes } from "../data/constants";
+import { Box } from "@mui/joy";
 
 export interface TextToSpeechProps {
     text: string;
+    type: string;
 }
 
 export const TextToSpeech = ({ text }: TextToSpeechProps) => {
@@ -10,21 +13,24 @@ export const TextToSpeech = ({ text }: TextToSpeechProps) => {
     const [voice, setVoice] = useState<SpeechSynthesisVoice>();
     const [pitch, setPitch] = useState(1);
     const [rate, setRate] = useState(1);
-    const [volume, setVolume] = useState(1);
+    const [volume, setVolume] = useState(.2);
 
     useEffect(() => {
         const synth = window.speechSynthesis;
         const u = new SpeechSynthesisUtterance(text);
         const voices: SpeechSynthesisVoice[] = synth.getVoices();
-
-
         setUtterance(u);
         setVoice(voices[0]);
 
+
         return () => {
-            synth.cancel();
+            u.voice = voice || null;
+            u.pitch = pitch;
+            u.rate = rate;
+            u.volume = volume;
+            synth.speak(u);
         };
-    }, [text]);
+    }, []);
 
     const handlePlay = () => {
         const synth = window.speechSynthesis;
@@ -77,7 +83,7 @@ export const TextToSpeech = ({ text }: TextToSpeechProps) => {
     };
 
     return (
-        <div>
+        <Box >
             <label>
                 Voice:
                 <select value={voice?.name} onChange={handleVoiceChange}>
@@ -134,7 +140,7 @@ export const TextToSpeech = ({ text }: TextToSpeechProps) => {
             <button onClick={handlePlay}>{isPaused ? "Resume" : "Play"}</button>
             <button onClick={handlePause}>Pause</button>
             <button onClick={handleStop}>Stop</button>
-        </div>
+        </Box>
     );
 };
 
