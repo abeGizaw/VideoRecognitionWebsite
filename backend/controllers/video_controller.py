@@ -20,7 +20,7 @@ def upload_and_process_video(source: str) -> str:
         # Process the video with out model
         result = process_video(file_path)
 
-        return jsonify({'message': f'Video processed successfully. {result} from {source}'})
+        return jsonify({'message': f'{result}'})
     except Exception as e:
         # Log the exception for debugging
         print("Error in upload_and_process_video:", traceback.format_exc())
