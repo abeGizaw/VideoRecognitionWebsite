@@ -3,11 +3,10 @@ CAN ONLY RUN THIS FILE ON ROSE SERVER
 """
 import os
 import time
-import pandas as pd
 from trainHelper import get_kinetics_dataFrames
 from torchvision.models.video import swin3d_b, Swin3D_B_Weights
 from videoCreator import create_dataloader
-from trainingMappings import unwanted_labels, new_classes, label_to_index_k400_generalized,generalized, index_to_label_k400_generalized
+from trainingMappings import label_to_index_k400_generalized, index_to_label_k400_generalized
 import torch
 import torch.nn.functional as F
 from torch import optim
@@ -84,8 +83,7 @@ model_path = os.path.join(current_dir, '../models/trained_swin_model_generalized
 state_dict = torch.load(model_path, map_location=device,weights_only=True)
 model.load_state_dict(state_dict, strict=True)
 
-print(len(mock_train_data['video_path']))
-print(len(mock_train_data['label_index']))
+
 dataloader = create_dataloader(
     video_paths=mock_train_data['video_path'], 
     video_labels=mock_train_data['label_index'],  
@@ -147,7 +145,7 @@ plt.plot(training_losses)
 plt.xlabel('Batch')
 plt.ylabel('Loss')
 plt.title('Training Loss')
-plt.savefig('training_loss.png')
+plt.savefig('training_loss_e2.png')
 plt.show()
 
 """
