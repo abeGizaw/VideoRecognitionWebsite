@@ -25,6 +25,7 @@ To set up the environment for this project, follow these steps:
 
     ```bash
     conda install pandas flask flask-cors joblib av matplotlib -c conda-forge -y
+    pip install transformers
     ```
 
 This setup will install all the necessary dependencies for running the program, including PyTorch, CUDA support, and essential libraries for data processing and visualization.
@@ -94,6 +95,9 @@ This section provides an overview of the key directories and files within the pr
 - **`video_model.py`**  
   This file loads the pre-trained video recognition model and handles video processing sent from the website. It utilizes the specified model architecture and pre-trained weights to analyze video inputs. The `video_model.py` file returns a JSON response with the top 5 predicted categories, offering confidence scores for each. It leverages PyTorch to perform inference and prepares the output for the frontend to display results.
 
+- **`chatbot_model.py`**  
+  Chat  
+
 ### 3. `backend/train/`
 
 - **`index.py`**  
@@ -110,6 +114,9 @@ This section provides an overview of the key directories and files within the pr
 
 - **`trainHelper.py`**  
   A utility file that provides helper functions supporting the training workflow. It includes functions for caching label mappings, generating dataframes for testing, and managing common tasks like logging and checkpoint creation. These utilities make the primary training scripts more modular and maintainable.
+
+- **`baseline.py`**
+  Basline  
 
 ---
 
