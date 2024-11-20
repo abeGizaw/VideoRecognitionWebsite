@@ -4,7 +4,6 @@ import { Box } from "@mui/joy";
 
 export interface TextToSpeechProps {
     text: string;
-    type: string;
 }
 
 export const TextToSpeech = ({ text }: TextToSpeechProps) => {
@@ -24,11 +23,7 @@ export const TextToSpeech = ({ text }: TextToSpeechProps) => {
 
 
         return () => {
-            u.voice = voice || null;
-            u.pitch = pitch;
-            u.rate = rate;
-            u.volume = volume;
-            synth.speak(u);
+           synth.cancel();
         };
     }, []);
 

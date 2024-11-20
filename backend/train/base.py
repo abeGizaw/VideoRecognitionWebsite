@@ -3,11 +3,10 @@ CAN ONLY RUN THIS FILE ON ROSE SERVER
 """
 import os
 import time
-import pandas as pd
 from trainHelper import get_kinetics_dataFrames
 from torchvision.models.video import swin3d_b, Swin3D_B_Weights
 from videoCreator import create_dataloader
-from trainingMappings import index_to_label_k400, unwanted_labels, new_classes, label_to_index_k400,combineLabels,generalized
+from trainingMappings import index_to_label_k400, label_to_index_k400
 import torch
 import torch.nn.functional as F
 from torch import optim 
@@ -17,6 +16,8 @@ kinetics_train_df, kinetics_test_df = get_kinetics_dataFrames()
 
 kinetics_400_labels = set(index_to_label_k400.values())
  
+
+# Filter out the Kinetics-400 labels from the data (Didn't end up using all of them)
 kinetics_train_filtered_df = kinetics_train_df[
     ~kinetics_train_df['label'].isin(kinetics_400_labels)
 ]
@@ -37,7 +38,7 @@ model = swin3d_b(weights=weights)
 preprocess = weights.transforms()
  
 """
-MOCKING TRAIN DATA
+TRAIN DATA
 """
 
 num_features = model.head.in_features
@@ -55,7 +56,7 @@ for param in model.head.parameters():
 
 kinetics_train_base_df = kinetics_train_df[
     kinetics_train_df['label'].isin(kinetics_400_labels)
-]
+].reset_index(drop=True)
  
 # Move model to device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -74,16 +75,15 @@ model.to(device)
 model_path = os.path.join(current_dir, '../models/trained_swin_model_base.pth')
 
 
-mock_train_data =  kinetics_train_base_df.reset_index(drop=True)
 # mock_train_data =  kinetics_strings_df.head(200).reset_index(drop=True)
-mock_train_data['label_index'] = mock_train_data['label'].map(label_to_index_k400)
-print('mock train labels being used \n', mock_train_data['label'].value_counts())
-print('train label size is: ', mock_train_data.shape)
+kinetics_train_base_df['label_index'] = kinetics_train_base_df['label'].map(label_to_index_k400)
+print('train labels being used \n', kinetics_train_base_df['label'].value_counts())
+print('train label size is: ', kinetics_train_base_df.shape)
 
 
 dataloader = create_dataloader(
-    video_paths=mock_train_data['video_path'], 
-    video_labels=mock_train_data['label_index'],  
+    video_paths=kinetics_train_base_df['video_path'], 
+    video_labels=kinetics_train_base_df['label_index'],  
     num_frames=16,
     batch_size=64,
     preprocess=preprocess
@@ -129,23 +129,25 @@ for epoch in range(num_epochs):
     # torch.save(model.state_dict(), model_path)
 
 """
-MOCKING MODEL ON TEST DATA
+MODEL ON TEST DATA
 """
 
+# Use this list to test on certain classes
 target_labels = ["adjusting glasses"] 
 
 kinetics_test_base_df = kinetics_test_df[
     kinetics_test_df['label'].isin(kinetics_400_labels)
-]
+].reset_index(drop=True)
+
 filtered_test_df = kinetics_test_df[
     kinetics_test_df['label'].isin(target_labels)
 ]
 
+# Limit the test data to 100 samples per class
 limited_test_df = filtered_test_df.groupby('label').head(100).reset_index(drop=True)
 limited_test_df['label_index'] = limited_test_df['label'].map(label_to_index_k400)
 
-mock_test_data = kinetics_test_base_df.reset_index(drop=True)
-mock_test_data['label_index'] = mock_test_data['label'].map(label_to_index_k400)
+kinetics_test_base_df['label_index'] = kinetics_test_base_df['label'].map(label_to_index_k400)
 model.load_state_dict(torch.load(model_path, map_location=device))
 model.eval()
 

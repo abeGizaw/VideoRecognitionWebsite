@@ -17,6 +17,7 @@ kinetics_train_df, kinetics_test_df = get_kinetics_dataFrames(generalized_data=T
 
 generalized_kinetics_400_labels = set(index_to_label_k400_generalized.values())
  
+# Filter out the Kinetics-400 labels from the data (Didn't end up using all of them) 
 kinetics_train_filtered_df = kinetics_train_df[
     ~kinetics_train_df['label'].isin(generalized_kinetics_400_labels)
 ]
@@ -37,13 +38,13 @@ model = swin3d_b(weights=weights)
 preprocess = weights.transforms()
  
 """
-MOCKING TRAIN DATA
+TRAINING DATA
 """
 
 num_features = model.head.in_features
 kinetics_train_base_df = kinetics_train_df[
     kinetics_train_df['label'].isin(generalized_kinetics_400_labels)
-]
+].reset_index(drop=True)
 
 # Modify the final layer to output the proper amount of classes
 model.head = torch.nn.Linear(num_features, kinetics_train_base_df['label'].nunique())
@@ -58,12 +59,11 @@ for param in model.head.parameters():
 
 
 
-mock_train_data =  kinetics_train_base_df.reset_index(drop=True)
 # mock_train_data =  kinetics_strings_df.head(200).reset_index(drop=True)
-mock_train_data['label_index'] = mock_train_data['label'].map(label_to_index_k400_generalized)
+kinetics_train_base_df['label_index'] = kinetics_train_base_df['label'].map(label_to_index_k400_generalized)
 
-print('train label size is: ', mock_train_data.shape)
-print('Number of Unique Labels: ', mock_train_data['label_index'].nunique())
+print('train label size is: ', kinetics_train_base_df.shape)
+print('Number of Unique Labels: ', kinetics_train_base_df['label_index'].nunique())
 
 
 
@@ -77,6 +77,7 @@ if torch.cuda.device_count() > 1:
 else:
     print("Using a single GPU or CPU for training")
 
+# Load the model weights
 current_dir = os.path.dirname(os.path.abspath(__file__))
 model.to(device)
 model_path = os.path.join(current_dir, '../models/trained_swin_model_generalized.pth')
@@ -85,8 +86,8 @@ model.load_state_dict(state_dict, strict=True)
 
 
 dataloader = create_dataloader(
-    video_paths=mock_train_data['video_path'], 
-    video_labels=mock_train_data['label_index'],  
+    video_paths=kinetics_train_base_df['video_path'], 
+    video_labels=kinetics_train_base_df['label_index'],  
     num_frames=16,
     batch_size=64,
     preprocess=preprocess
@@ -138,9 +139,11 @@ for epoch in range(num_epochs):
     # Save the model after each epoch
     torch.save(model.state_dict(), model_path)
 
+# Save the training losses to a file
 with open("training_losses_gen.txt", "w") as f:
     f.write(f"{training_losses}\n")
 
+# Plot the training losses
 plt.plot(training_losses)
 plt.xlabel('Batch')
 plt.ylabel('Loss')
@@ -149,42 +152,45 @@ plt.savefig('training_loss_e2.png')
 plt.show()
 
 """
-MOCKING MODEL ON TEST DATA
+MODEL ON TEST DATA
 """
 
+# Use this list to test on certain classes
 target_labels = ["adjusting glasses"] 
 
 kinetics_test_base_df = kinetics_test_df[
     kinetics_test_df['label'].isin(generalized_kinetics_400_labels)
-]
+].reset_index(drop=True)
+
 filtered_test_df = kinetics_test_df[
     kinetics_test_df['label'].isin(target_labels)
 ]
 
+# Limit the test data to 100 samples per class
 limited_test_df = filtered_test_df.groupby('label').head(100).reset_index(drop=True)
 limited_test_df['label_index'] = limited_test_df['label'].map(label_to_index_k400_generalized)
+kinetics_test_base_df['label_index'] = kinetics_test_base_df['label'].map(label_to_index_k400_generalized)
 
-mock_test_data = kinetics_test_base_df.reset_index(drop=True)
-mock_test_data['label_index'] = mock_test_data['label'].map(label_to_index_k400_generalized)
 model.eval()
+# Load the model weights
 model.load_state_dict(torch.load(model_path, map_location=device, weights_only=True))
 
 dataloader = create_dataloader(
-    video_paths=mock_test_data['video_path'],
-    video_labels=mock_test_data['label_index'], 
+    video_paths=kinetics_test_base_df['video_path'],
+    video_labels=kinetics_test_base_df['label_index'], 
     num_frames=16,
     batch_size=64,
     preprocess=preprocess
 ) 
  
-# print(limited_test_df.head(5))
 
 correct_predictions = 0
 top5_correct_predictions = 0
 total_predictions = 0
 wrong_paths = []
 
-results = []    
+results = []
+# Write all batch results to a file
 with open("results_gen.txt", "w") as f:
     with torch.no_grad():
         for i, (batch, label) in enumerate(dataloader):
@@ -207,7 +213,7 @@ with open("results_gen.txt", "w") as f:
             top_5 = top_5.cpu().tolist()   
             top_5_confidences = top_5_confidences.cpu().tolist()       
 
-            # Convert indices to labelsconad
+            # Convert indices to labels
             predicted_labels_mapped = [index_to_label_k400_generalized.get(idx, f"unknown_{idx}") for idx in predicted_labels]
             top_5_mapped = [[index_to_label_k400_generalized.get(idx, f"unknown_{idx}") for idx in indices] for indices in top_5]           
             true_labels_mapped = [index_to_label_k400_generalized.get(label, label) for label in labels]
@@ -241,6 +247,7 @@ with open("results_gen.txt", "w") as f:
                 f.write(f"{entry}\n")
             f.write("\n")
 
+            # # Format the results for display
             # for i, (pred_label, top5_labels, top5_conf) in enumerate(zip(predicted_labels, top_5_mapped, top_5_confidences)):
             #     result = f"Prediction {i + 1}:\n"
             #     result += f"Most confident: {pred_label}\n"
@@ -260,6 +267,7 @@ top5_accuracy = top5_correct_predictions / total_predictions
 print(f"Accuracy: {accuracy:.4f}")
 print(f"Top-5 Accuracy: {top5_accuracy:.4f}")
 
+# Save the wrong paths to a file
 with open("wrong_paths_gen.txt", "w") as wrong_path:
     for (path, top_5) in wrong_paths:
         wrong_path.write(f"\n {path} \n {top_5}\n")

@@ -13,6 +13,7 @@ def process_video(file_path):
     """
     print(f"Processing video at {file_path}")
     result = ""
+    mostConfident = ""
 
     # Load the pre-trained weights
     weights = Swin3D_B_Weights.KINETICS400_IMAGENET22K_V1
@@ -20,7 +21,8 @@ def process_video(file_path):
     preprocess = weights.transforms()
 
 
-    # Modify the final layer to output correct number of classes
+    # Modify the final layer to output correct number of classes. 
+    # Change to 400 if using generalized model
     num_features = model.head.in_features
     model.head = torch.nn.Linear(num_features, 400)
     # Freeze all layers except the final layer
@@ -44,11 +46,13 @@ def process_video(file_path):
     if not os.path.exists(os.path.join(current_dir, 'trained_swin_model_test.pth')):
         download_file_from_google_drive(os.path.join(current_dir, 'trained_swin_model_test.pth'))
 
-    model_path_test = os.path.join(current_dir, 'trained_swin_model_test.pth')    
-    model_path = os.path.join(current_dir, 'trained_swin_model_generalized.pth')
+    model_path_test = os.path.join(current_dir, 'trained_swin_model_test.pth')
+
+    base_model_path = os.path.join(current_dir, 'trained_swin_model_base.pth')
+    gen_model_path = os.path.join(current_dir, 'trained_swin_model_generalized.pth')
 
    
-    state_dict = torch.load(model_path, map_location=device, weights_only=True)
+    state_dict = torch.load(gen_model_path, map_location=device, weights_only=True)
     model.load_state_dict(state_dict, strict=True)
     model.eval()
 
@@ -81,13 +85,18 @@ def process_video(file_path):
 
             # Build the result string
             result = f"Most confident: {label}\nI think it is at least one of these 5:\n"
+            mostConfident = label
             for lbl, confidence in zip(top_5_labels, top_5_confidences):
                 result += f"{confidence.item() * 100:.2f}%: {lbl}\n"
                 
-        return result
+        return result, mostConfident
     
 
 def download_file_from_google_drive(destination):
+    """
+    Downloads the model weights file from Google Drive. This function is only used if the model weights file is not found.
+    This file is too large to store in the repository.
+    """
     url = f"https://drive.google.com/file/d/17hg4JqdVocv5B9LOVhLJdjvkmwHO_bhm/view?usp=sharing"
     response = requests.get(url, stream=True)
     with open(destination, "wb") as file:

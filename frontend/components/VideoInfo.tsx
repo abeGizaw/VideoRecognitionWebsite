@@ -16,7 +16,7 @@ export const VideoInfo = ({ displayMessage, textToSpeechBox, resultMessage }: Vi
         <Box sx={{ width: '100vh' }}>
             <Box>
                 <Box display={textToSpeechBox ? 'block' : 'none'}>
-                    <TextToSpeech text={resultMessage.message} type={resultMessage.type} />
+                    <TextToSpeech text={resultMessage.message} />
                 </Box>
                 <Typography sx={{ textAlign: 'center' }}>{displayMessage.message}</Typography>
                 <Box display={textToSpeechBox ? 'block' : 'none'}>
