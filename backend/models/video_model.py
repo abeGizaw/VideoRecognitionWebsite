@@ -43,12 +43,12 @@ def process_video(file_path):
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
 
-    if not os.path.exists(os.path.join(current_dir, 'trained_swin_model_test.pth')):
-        download_file_from_google_drive(os.path.join(current_dir, 'trained_swin_model_test.pth'))
+    if not os.path.exists(os.path.join(current_dir, 'trained_swin_model_generalized.pth')):
+        download_file_from_google_drive(os.path.join(current_dir, 'trained_swin_model_generalized.pth'))
 
-    model_path_test = os.path.join(current_dir, 'trained_swin_model_test.pth')
 
-    base_model_path = os.path.join(current_dir, 'trained_swin_model_base.pth')
+    # Base model not saved on Google Drive. Only Generalized Model
+    # base_model_path = os.path.join(current_dir, 'trained_swin_model_base.pth')
     gen_model_path = os.path.join(current_dir, 'trained_swin_model_generalized.pth')
 
    
