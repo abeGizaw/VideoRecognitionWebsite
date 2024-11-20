@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { MessageTypes } from "../data/constants";
 import { Box } from "@mui/joy";
 
 export interface TextToSpeechProps {
@@ -25,7 +24,7 @@ export const TextToSpeech = ({ text }: TextToSpeechProps) => {
         return () => {
            synth.cancel();
         };
-    }, []);
+    }, [text]);
 
     const handlePlay = () => {
         const synth = window.speechSynthesis;
