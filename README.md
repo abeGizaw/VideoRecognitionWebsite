@@ -56,7 +56,6 @@ git clone https://github.com/abeGizaw/VideoRecognitionWebsite.git
 After cloning the repository, navigate into the project directory and switch to the `local_dev` branch:
 ```bash
 cd VideoRecognitionWebsite
-git checkout local_dev
 ```
 
 ### 3. **Start the Backend (Flask)**
