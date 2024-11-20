@@ -80,6 +80,7 @@ cd VideoRecognitionWebsite
      ```
    - Start the frontend development server:
      ```bash
+     npm install
      npm run dev
      ```
 
