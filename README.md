@@ -5,7 +5,7 @@ Currently, there is no working deployed version of this website due to the large
 This project allows users to upload or record videos for action classification using a Swin3db model. To run this website locally, follow the steps below.
 
 
-## Getting Started
+## Getting the website Started
 I recommend running this on a server with GPUs (Example Rose Server -- uses Linux)
 ### 1. Clone the Repository
 
@@ -110,7 +110,7 @@ This section provides an overview of the key directories and files within the pr
   This file loads the pre-trained video recognition model and handles video processing sent from the website. It utilizes the specified model architecture and pre-trained weights to analyze video inputs. The `video_model.py` file returns a JSON response with the top 5 predicted categories, offering confidence scores for each. It leverages PyTorch to perform inference and prepares the output for the frontend to display results.
 
 - **`chatbot_model.py`**  
-  Chat  
+  Code for Chatbot 
 
 ### 3. `backend/train/`
 
@@ -130,12 +130,20 @@ This section provides an overview of the key directories and files within the pr
   A utility file that provides helper functions supporting the training workflow. It includes functions for caching label mappings, generating dataframes for testing, and managing common tasks like logging and checkpoint creation. These utilities make the primary training scripts more modular and maintainable.
 
 - **`baseline.py`**
-  Basline  
+  Baseline Code  
 
 ---
 
 This structure provides an overview of the primary components within the project. Each section can be expanded upon to explain specific functions, classes, or processes as needed.
 
-## Notes
-Ensure you have all necessary dependencies installed (pip for Python dependencies and npm for frontend dependencies).
-If you encounter any issues, make sure you are using compatible versions of Python and Node.js as specified in the repository requirements.
+## How to train and test model
+Simply run 
+```bash
+  python backend/train/index.py
+ ```
+within the VideoRecogniton Folder. **MAKE SURE YOU ARE ON A BRANCH WHEN DOING THIS**
+
+## Notes and Warnings
+Ensure you have all necessary dependencies installed (pip for Python dependencies and npm for frontend dependencies).  
+If you encounter any issues, make sure you are using compatible versions of Python and Node.js as specified in the repository requirements.  
+When running the website, the first time you upload a video, the model weights will be uploaded locally. The model is about 364 MB. After it downloads once, the website will run a lot faster. 
