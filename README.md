@@ -8,8 +8,6 @@ This project allows users to upload or record videos for action classification u
 
 To set up the environment for this project, follow these steps:
 
-We recommend running this project on a server with GPUs (For example the Rose Hulman server which is in Linux)
-
 1. **Create and activate a new Conda environment:**
 
     ```bash
