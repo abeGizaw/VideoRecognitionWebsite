@@ -14,6 +14,7 @@ def process_video(file_path):
     print(f"Processing video at {file_path}")
     result = ""
     mostConfident = ""
+    usedParallel = False
 
     # Load the pre-trained weights
     weights = Swin3D_B_Weights.KINETICS400_IMAGENET22K_V1
@@ -37,6 +38,7 @@ def process_video(file_path):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if torch.cuda.device_count() > 1:
         model = torch.nn.DataParallel(model)  # Use all available GPUs
+        usedParallel = True
     model.to(device)
 
     # Construct the absolute path to the model weights file
@@ -51,8 +53,9 @@ def process_video(file_path):
 
    
     state_dict = torch.load(gen_model_path, map_location=device, weights_only=True)
-    new_state_dict = {k.replace('module.', ''): v for k, v in state_dict.items()}
-    model.load_state_dict(new_state_dict, strict=True)
+    if not usedParallel:
+        state_dict = {k.replace('module.', ''): v for k, v in state_dict.items()}
+    model.load_state_dict(state_dict, strict=True)
     model.eval()
 
     # Create a DataLoader for the single video
