@@ -8,6 +8,8 @@ This project allows users to upload or record videos for action classification u
 
 To set up the environment for this project, follow these steps:
 
+We recommend running this project on a server with GPUs (For example the Rose Hulman server which is in Linux)
+
 1. **Create and activate a new Conda environment:**
 
     ```bash
@@ -16,9 +18,17 @@ To set up the environment for this project, follow these steps:
     ```
 
 2. **Install PyTorch with CUDA, torchvision, and torchaudio. This assumes you are using linux:**
-
+- For Linux
     ```bash
     conda install pytorch torchvision torchaudio pytorch-cuda=12.4 -c pytorch -c nvidia -y
+    ```
+- For Mac
+    ```bash
+    conda install pytorch::pytorch torchvision torchaudio -c pytorch
+    ```
+- For Windows
+    ```bash
+    conda install pytorch torchvision torchaudio pytorch-cuda=12.4 -c pytorch -c nvidia
     ```
 
 3. **Install additional libraries:**
@@ -26,6 +36,7 @@ To set up the environment for this project, follow these steps:
     ```bash
     conda install pandas flask flask-cors joblib av matplotlib -c conda-forge -y
     pip install transformers
+    pip install sentencepiece
     ```
 
 This setup will install all the necessary dependencies for running the program, including PyTorch, CUDA support, and essential libraries for data processing and visualization.
