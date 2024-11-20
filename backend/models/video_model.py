@@ -22,7 +22,7 @@ def process_video(file_path):
 
 
     # Modify the final layer to output correct number of classes. 
-    # Change to 400 if using generalized model
+    # Change to 401 if using base model
     num_features = model.head.in_features
     model.head = torch.nn.Linear(num_features, 400)
     # Freeze all layers except the final layer
@@ -42,12 +42,12 @@ def process_video(file_path):
     # Construct the absolute path to the model weights file
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
-    # Base model not saved on release. Only Generalized Model
+    # If using base model, use this path and everywhere that uses generalized model replace with this path / comment out the generalized model path
     # base_model_path = os.path.join(current_dir, 'trained_swin_model_base.pth')
     gen_model_path = os.path.join(current_dir, 'trained_swin_model_generalized.pth')
-
     if not os.path.exists(gen_model_path):
-        download_file_from_github_release(gen_model_path)
+        # Pass in base as model type if using base model
+        download_file_from_github_release(gen_model_path, "generalized")
 
    
     state_dict = torch.load(gen_model_path, map_location=device, weights_only=True)
@@ -90,12 +90,12 @@ def process_video(file_path):
         return result, mostConfident
     
 
-def download_file_from_github_release(destination):
+def download_file_from_github_release(destination, model_type):
     """
     Downloads the model weights file from a GitHub release.
     This function writes the file to the specified destination.
     """
-    url = "https://github.com/abeGizaw/VideoRecognitionWebsite/releases/download/v1.0.0/trained_swin_model_generalized.pth"
+    url = f"https://github.com/abeGizaw/VideoRecognitionWebsite/releases/download/v1.0.0/trained_swin_model_{model_type}.pth"
     response = requests.get(url, stream=True)
 
     if response.status_code == 200:
