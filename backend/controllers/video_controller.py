@@ -1,7 +1,8 @@
 import traceback
 from flask import request, jsonify
-from models.video_model import process_video 
+from models.video_model import process_video
 from utils.index import save_video_to_dir
+from models.chatbot_model import small_chatbot_model, large_chatbot_model
 
 # Controller method to handle video upload and processing
 def upload_and_process_video(source: str) -> str:
@@ -18,9 +19,13 @@ def upload_and_process_video(source: str) -> str:
         file_path = save_video_to_dir(file)
 
         # Process the video with out model
-        result = process_video(file_path)
+        result, mostConfident = process_video(file_path)
 
-        return jsonify({'message': f'Video processed successfully. {result} from {source}'})
+        if source == 'chatBot':
+            result = small_chatbot_model(mostConfident)
+            # result = large_chatbot_model(result)
+
+        return jsonify({'message': f'{result}'})
     except Exception as e:
         # Log the exception for debugging
         print("Error in upload_and_process_video:", traceback.format_exc())

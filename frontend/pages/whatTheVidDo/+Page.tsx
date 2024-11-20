@@ -3,12 +3,21 @@ import { useCallback, useEffect, useState } from 'react';
 // React Dropzone uses a CommonJS export while Vite expects ES Module exports, so we need to import it like this
 import * as pkg from 'react-dropzone';
 import { DragNDrop } from '../../components/DragNDrop';
+import { VideoInfo } from '../../components/VideoInfo';
+import { MessageTypes } from '../../data/constants';
 const { useDropzone } = pkg;
 
+export type Message = {
+  message: string;
+  type: string;
+}
+
 export const Page = () => {
-  const [message, setMessage] = useState<string>('');
+  const [message, setMessage] = useState<Message>({ message: '', type: '' });
+  const [classificationMessage, setClassificationMessage] = useState<Message>({ message: '', type: '' });
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string>('');
+  const [textToSpeechBox, setTextToSpeechBox] = useState<boolean>(false);
 
   // Callback to handle the file drop event in our 'Dropzone' component
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -16,26 +25,24 @@ export const Page = () => {
       const file = acceptedFiles[0];
       if (file.type.startsWith('video/')) {
         setVideoFile(file);
-        setMessage(`Selected video: ${file.name}`);
+        setMessage({ message: `Selected video: ${file.name}`, type: MessageTypes.PRE });
+        const previewUrl = URL.createObjectURL(file);
+        setVideoPreview(previewUrl);
+        setTextToSpeechBox(false);
       } else {
-        setMessage('Please select a valid video file.');
+        setMessage({ message: `Please select a valid video file.`, type: MessageTypes.ERROR });
       }
     }
   }, []);
 
   useEffect(() => {
-    if (videoFile) {
-      // Create a URL for the video file to preview it
-      const previewUrl = URL.createObjectURL(videoFile);
-      setVideoPreview(previewUrl);
-
+    if (videoPreview) {
       return () => {
-        URL.revokeObjectURL(previewUrl);
+        URL.revokeObjectURL(videoPreview);
       };
-    } else {
-      setVideoPreview('');
     }
-  }, [videoFile]);
+  }, [videoPreview]);
+
 
   const handleUpload = async () => {
     if (videoFile) {
@@ -43,7 +50,7 @@ export const Page = () => {
         // Create a FormData object to send the file to the server
         const formData = new FormData();
         formData.append('file', videoFile);
-        setMessage('Uploading file...');
+        setMessage({ message: 'Uploading file...', type: MessageTypes.PRE });
 
         // const uploadResponse = await fetch(
         //   `${"https://my-backend-app-1001376648512.us-central1.run.app"}/upload`,
@@ -69,13 +76,15 @@ export const Page = () => {
 
         if (uploadResponse.ok) {
           const result = await uploadResponse.json();
-          setMessage(result.message);
+          setClassificationMessage({ message: result.message, type: MessageTypes.POST });
+          setMessage({ message: '', type: MessageTypes.PRE });
+          setTextToSpeechBox(true);
         } else {
-          setMessage('Failed to upload file.');
+          setMessage({ message: 'Failed to upload file.', type: MessageTypes.ERROR });
         }
       } catch (error) {
         console.error('Error uploading file:', error);
-        setMessage('Failed to upload file.');
+        setMessage({ message: 'Failed to upload file.', type: MessageTypes.ERROR });
       }
     }
   };
@@ -89,7 +98,9 @@ export const Page = () => {
 
   const handleRemove = () => {
     setVideoFile(null);
-    setMessage('');
+    setMessage({ message: '', type: MessageTypes.PRE });
+    setClassificationMessage({ message: '', type: MessageTypes.PRE });
+    setTextToSpeechBox(false);
   };
 
   return (
@@ -118,7 +129,7 @@ export const Page = () => {
       {videoFile && (
         <Box sx={{ textAlign: 'center' }}>
           <Typography>Selected video: {videoFile.name}</Typography>
-          <video width='300' controls>
+          <video width='300' controls key={videoPreview}>
             <source src={videoPreview} type={videoFile.type} />
             Your browser does not support the video tag.
           </video>
@@ -132,7 +143,7 @@ export const Page = () => {
       <Button onClick={handleUpload} disabled={!videoFile}>
         Upload
       </Button>
-      {message && <Typography>{message}</Typography>}
+      <VideoInfo displayMessage={message} resultMessage={classificationMessage} textToSpeechBox={textToSpeechBox} />
     </Box>
   );
 };
