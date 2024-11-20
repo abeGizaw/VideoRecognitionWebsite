@@ -51,7 +51,8 @@ def process_video(file_path):
 
    
     state_dict = torch.load(gen_model_path, map_location=device, weights_only=True)
-    model.load_state_dict(state_dict, strict=True)
+    new_state_dict = {k.replace('module.', ''): v for k, v in state_dict.items()}
+    model.load_state_dict(new_state_dict, strict=True)
     model.eval()
 
     # Create a DataLoader for the single video
