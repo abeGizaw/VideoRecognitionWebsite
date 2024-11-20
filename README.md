@@ -4,8 +4,24 @@
 Currently, there is no working deployed version of this website due to the large storage requirements, which are challenging to manage on Google Cloud. To use the website, you will need to run it locally.  
 This project allows users to upload or record videos for action classification using a Swin3db model. To run this website locally, follow the steps below.
 
-## Setup Instructions
 
+## Getting Started
+
+### 1. Clone the Repository
+
+Clone this repository to your local machine:
+
+```bash
+git clone https://github.com/abeGizaw/VideoRecognitionWebsite.git
+```
+
+### 2. **Navigate to Project Directory**
+After cloning the repository, navigate into the project directory:
+```bash
+cd VideoRecognitionWebsite
+```
+
+### 3. **Setup Conda Environment**
 To set up the environment for this project, follow these steps:
 
 1. **Create and activate a new Conda environment:**
@@ -32,7 +48,12 @@ To set up the environment for this project, follow these steps:
 3. **Install additional libraries:**
 
     ```bash
-    conda install pandas flask flask-cors joblib av matplotlib -c conda-forge -y
+    conda install -c conda-forge matplotlib -y
+    conda install -c conda-forge av -y
+    conda install -c conda-forge joblib -y
+    conda install -c conda-forge flask-cors
+    conda install -c conda-forge flask-cors
+    conda install flask
     pip install transformers
     pip install sentencepiece
     ```
@@ -40,23 +61,7 @@ To set up the environment for this project, follow these steps:
 This setup will install all the necessary dependencies for running the program, including PyTorch, CUDA support, and essential libraries for data processing and visualization.
 
 
-## Getting Started
-
-### 1. Clone the Repository
-
-Clone this repository to your local machine:
-
-```bash
-git clone https://github.com/abeGizaw/VideoRecognitionWebsite.git
-```
-
-### 2. **Checkout the Local Development Branch**
-After cloning the repository, navigate into the project directory and switch to the `local_dev` branch:
-```bash
-cd VideoRecognitionWebsite
-```
-
-### 3. **Start the Backend (Flask)**
+### 4. **Start the Backend (Flask)**
    - Change into the backend directory:
      ```bash
      cd backend
@@ -66,7 +71,7 @@ cd VideoRecognitionWebsite
      python app.py
      ```
 
-### 4. **Start the Frontend (React)**
+### 5. **Start the Frontend (React)**
    - Open a new terminal window.
    - Navigate back to the root directory:
      ```bash
