@@ -42,14 +42,12 @@ def process_video(file_path):
     # Construct the absolute path to the model weights file
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
-
-    if not os.path.exists(os.path.join(current_dir, 'trained_swin_model_generalized.pth')):
-        download_file_from_google_drive(os.path.join(current_dir, 'trained_swin_model_generalized.pth'))
-
-
-    # Base model not saved on Google Drive. Only Generalized Model
+    # Base model not saved on release. Only Generalized Model
     # base_model_path = os.path.join(current_dir, 'trained_swin_model_base.pth')
     gen_model_path = os.path.join(current_dir, 'trained_swin_model_generalized.pth')
+
+    if not os.path.exists(gen_model_path):
+        download_file_from_github_release(gen_model_path)
 
    
     state_dict = torch.load(gen_model_path, map_location=device, weights_only=True)
@@ -92,14 +90,19 @@ def process_video(file_path):
         return result, mostConfident
     
 
-def download_file_from_google_drive(destination):
+def download_file_from_github_release(destination):
     """
-    Downloads the model weights file from Google Drive. This function is only used if the model weights file is not found.
-    This file is too large to store in the repository.
+    Downloads the model weights file from a GitHub release.
+    This function writes the file to the specified destination.
     """
-    url = f"https://drive.google.com/file/d/17hg4JqdVocv5B9LOVhLJdjvkmwHO_bhm/view?usp=sharing"
+    url = "https://github.com/abeGizaw/VideoRecognitionWebsite/releases/download/v1.0.0/trained_swin_model_generalized.pth"
     response = requests.get(url, stream=True)
-    with open(destination, "wb") as file:
-        for chunk in response.iter_content(chunk_size=1024):
-            if chunk:
-                file.write(chunk)
+
+    if response.status_code == 200:
+        with open(destination, "wb") as file:
+            for chunk in response.iter_content(chunk_size=1024):
+                if chunk:
+                    file.write(chunk)
+        print(f"File downloaded successfully to {destination}")
+    else:
+        raise Exception(f"Failed to download file. HTTP Status Code: {response.status_code}")
