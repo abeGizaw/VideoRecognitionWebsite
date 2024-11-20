@@ -6,7 +6,7 @@ This project allows users to upload or record videos for action classification u
 
 
 ## Getting Started
-
+I recommend running this on a server with GPUs (Example Rose Server -- uses Linux)
 ### 1. Clone the Repository
 
 Clone this repository to your local machine:
