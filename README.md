@@ -55,6 +55,7 @@ To set up the environment for this project, follow these steps:
     conda install -c conda-forge flask-cors
     conda install flask
     pip install transformers
+    pip install accelerate
     pip install sentencepiece
     ```
 
