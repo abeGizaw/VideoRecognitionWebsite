@@ -1,6 +1,5 @@
 import {
   Box,
-  Button,
   Option,
   Select,
   Typography,
@@ -22,8 +21,7 @@ export const Page = () => {
         gap: '1rem',
       }}
     >
-      <Typography level='h1'>Hello world</Typography>
-      <Button>Test</Button>
+      <Typography level='h1'>What Tha Vid Do 🎥</Typography>
       <Select value={mode} onChange={(_, newMode) => setMode(newMode)}>
         <Option value='system'>System</Option>
         <Option value='light'>Light</Option>
