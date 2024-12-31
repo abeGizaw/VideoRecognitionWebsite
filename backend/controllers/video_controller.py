@@ -2,7 +2,7 @@ import traceback
 from flask import request, jsonify
 from models.video_model import process_video
 from utils.index import save_video_to_dir
-from models.chatbot_model import small_chatbot_model, large_chatbot_model
+from models.chatbot_model import small_chatbot_model, large_chatbot_model, aiSuite_chatbot_model
 
 # Controller method to handle video upload and processing
 def upload_and_process_video(source: str) -> str:
@@ -22,7 +22,8 @@ def upload_and_process_video(source: str) -> str:
         result, mostConfident = process_video(file_path)
 
         if source == 'chatBot':
-            result = small_chatbot_model(mostConfident)
+            # result = aiSuite_chatbot_model(result)
+            reuslt = small_chatbot_model(mostConfident)
             # result = large_chatbot_model(result)
 
         return jsonify({'message': f'{result}'})

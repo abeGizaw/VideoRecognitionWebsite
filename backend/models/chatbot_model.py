@@ -1,6 +1,27 @@
 
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
-from transformers import T5Tokenizer, T5ForConditionalGeneration
+import aisuite as ai
+
+def aiSuite_chatbot_model(result):
+    # Load the model
+    client = ai.Client()
+    messages = [
+        {"role": "system", "content": "You are part of a website where a user can record themselves doing some action, and a separate model classifies the action."},
+        {"role": "system", "content": "The model passes the top 5 in this format: 'Most confident: 'category' I think it is at least one of these 5: *lists 5 categories with confidence*'."},
+        {"role": "system", "content": "Send a response appropriate to the most confident category."},
+        {"role": "system", "content": "For example:"},
+        {"role": "system", "content": "- If they wave, wave back."},
+        {"role": "system", "content": "- If they are playing a game, say you love the game."},
+        {"role": "system", "content": "- If unsure, state some fun facts."},
+        {"role": "system", "content": f"Here is the result: {result}"},
+    ]
+
+    response = client.chat.completions.create(model="openai:gpt-4o", messages=messages, temperature=0.7)
+
+
+    return response.choices[0].message.content
+
+
 
 def large_chatbot_model(result):
     # When actually using this model, the model and tokenizer should be loaded once and reused for all requests (outside of the function)   
